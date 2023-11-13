@@ -1,0 +1,25 @@
+@HTTP=http
+@HTTPS=https
+
+@HOST=localhost:3000
+@REAL_HOST=api.healthfactory.kr
+@CONTENT-TYPE-JSON=application/json;charset=UTF-8
+
+@START-PATH=artworks
+
+###
+GET {{HTTP}}://{{HOST}}/{{START-PATH}}/ARTWK-20220511182604f980?detail=ranges,keywords
+
+###
+
+GET {{HTTP}}://{{HOST}}/{{START-PATH}}/xml/page?detail=ranges,manager
+
+###
+PATCH {{HTTP}}://{{HOST}}/{{START-PATH}}/ARTWK-20220511182604f980
+Content-Type: {{CONTENT-TYPE-JSON}}
+
+{
+  "ranges": [
+    { "id": "9", "startDate": 0, "endDate": 4375692835982}
+  ]
+}
