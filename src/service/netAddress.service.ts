@@ -70,38 +70,40 @@ export class NetAddressesService {
     return artworkView;
   }
 
-  async addMoveAndCount(artwork: Artwork, ip: string): Promise<ArtworkMove> {
+  async addMoveAndCount(artwork: Artwork, ip: string): Promise<number> {
     if( !artwork || !ip )
       return;
     const repos = getRepositories({
       move: ArtworkMove,
       artwork: ArtworkRepository
     }, this.connection.manager)
-    const netAddress = await this.getOrCreateNetAddress(ip);
-    if( !netAddress )
-      return;
+    // const netAddress = await this.getOrCreateNetAddress(ip);
+    // if( !netAddress )
+    //   return;
     const orgMove = artwork.move;
-    const artworkMove = await repos.move.save({ artwork, netAddress })
+    // const artworkMove = await repos.move.save({ artwork, netAddress })
     artwork.move ++;
-
-    repos.move.createQueryBuilder('VEW')
-    .select('VEW.netAddress')
-    // .addSelect('COUNT(*) AS viewCount')
-    .where('VEW.artwork = :artworkid', {artworkid: artwork.id})
-    .groupBy('VEW.netAddress')
-    .getRawMany()
-    .then( async arr => {
-      const count = arr.length;
-      if( orgMove !== count )
-        await repos.artwork.update( artwork.id, {
-          move: count,
-          upt_date: () => 'upt_date'
-        })
-    });
+    await repos.artwork.update( artwork.id, {
+      move: orgMove+1,
+      upt_date: () => 'upt_date'
+    })
+    // repos.move.createQueryBuilder('VEW')
+    // .select('VEW.netAddress')
+    // .where('VEW.artwork = :artworkid', {artworkid: artwork.id})
+    // .groupBy('VEW.netAddress')
+    // .getRawMany()
+    // .then( async arr => {
+    //   const count = arr.length;
+    //   if( orgMove !== count )
+    //     await repos.artwork.update( artwork.id, {
+    //       move: count,
+    //       upt_date: () => 'upt_date'
+    //     })
+    // });
     
     
     
-    return artworkMove;
+    return orgMove+1;
   }
 
 
