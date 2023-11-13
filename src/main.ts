@@ -49,7 +49,7 @@ const setCors = ( app: INestApplication ) => {
     credentials: true,
     origin: 
       process.env.NODE_ENV === 'prod'
-      ?[/https?:\/\/(.*\.)?wemov\.co\.kr/]
+      ?[/https?:\/\/(.*\.)?cafe24\.com/]
         // ? [/https?:\/\/(.*\.)?sharpmusic\.co\.kr/,'https://lessonhaja.com','https://www.lessonhaja.com']
         // ? [/https?:\/\/(.*\.)?sharpmusic\.co\.kr/,/https?:\/\/(.*\.)?lessonhaja\.com/]
         : [/https?:\/\/(localhost.*|(127|192).*|.*\.domain\.com)/]
