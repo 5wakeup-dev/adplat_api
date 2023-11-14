@@ -70,7 +70,7 @@ const ARTWORK_SEARCH_SELECT_PIPE = selectPipe<SearchArtworkDto>({
       val, 
       ['column', 'order'],
       {
-        limit: [['id', 'view','end', 'reg_date', 'state'], ['DESC', 'ASC']],
+        limit: [['id', 'view','end',"price", 'reg_date', 'state'], ['DESC', 'ASC']],
         def: {column: 'reg_date', order: 'DESC'}
       }
     );

@@ -452,7 +452,7 @@ export class ArtworkRepository extends ChainRepository<Artwork> {
     if (root || parentUk) {
       // query = query.leftJoin(`${this.alias}.hierarchical`, `SRC_${ARTWORK_HIERARCHICAL}`)
 
-      if (root)      
+      if (root)
         query = query.andWhere(`SRC_${ARTWORK_HIERARCHICAL}.groupParent IS NULL`)
       if (parentUk)
         query = query.leftJoin(Artwork, 'PRT_ART', `SRC_${ARTWORK_HIERARCHICAL}.groupParent = PRT_ART.id`)
@@ -467,8 +467,8 @@ export class ArtworkRepository extends ChainRepository<Artwork> {
         .andWhere(`SRC_KWD.keyword LIKE :keyword`, { keyword: `%${keyword}%` })
     }
     if (propsKey && propsVal) {
-      query = query.leftJoin(`${this.alias}.properties`, `SRC_${ARTWORK_PROPERTIES}`)
-        .andWhere(`SRC_${ARTWORK_PROPERTIES}.key = :propsKey and SRC_${ARTWORK_PROPERTIES}.val = :propsVal `, { propsKey, propsVal })
+      query = query.leftJoinAndSelect(`${this.alias}.properties`, `SRC_${ARTWORK_PROPERTIES}`)
+        .andWhere(`(SRC_${ARTWORK_PROPERTIES}.key = :propsKey and SRC_${ARTWORK_PROPERTIES}.val = :propsVal)`, { propsKey, propsVal })
     }
     if (range) {
       const { start, end } = range;
@@ -550,7 +550,7 @@ export class ArtworkRepository extends ChainRepository<Artwork> {
       }
     }
 
-      query=query.orderBy(`${ARTWORK_HIERARCHICAL}.groupId`, `DESC`)
+    query = query.orderBy(`${ARTWORK_HIERARCHICAL}.groupId`, `DESC`)
       .addOrderBy(`${ARTWORK_HIERARCHICAL}.groupOrd`, 'ASC')
 
     if (orderBy) {
@@ -563,6 +563,12 @@ export class ArtworkRepository extends ChainRepository<Artwork> {
         if (column === 'end') {
           query = query.leftJoinAndSelect(`${this.alias}.ranges`, `SRC_END_${ARTWORK_RANGES}`)
           query = query.orderBy(`SRC_END_${ARTWORK_RANGES}.endDate`, order as 'DESC' | 'ASC');
+        }
+        if (column === "price") {
+          
+          query = query.leftJoinAndSelect(`${this.alias}.properties`, `SRC_${ARTWORK_PROPERTIES}_PR`)
+          query = query.andWhere(`SRC_${ARTWORK_PROPERTIES}_PR.key = "price"`)
+          query = query.orderBy(`SRC_${ARTWORK_PROPERTIES}_PR.val`, order as "DESC" | "ASC") // 오름차순 정렬
         }
 
       }
