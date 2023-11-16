@@ -48,7 +48,7 @@ const ARTWORK_BRANCH_PIT_PIPE = fitPipe<SearchArtworkBranchDto>([
   
 // ])
 const ARTWORK_FIT_PIPE = fitPipe<ArtworkReq>([
-  'menu', 'i18ns', 'attachments', 'title', 'content', 
+  'menu', 'i18ns', 'attachments', 'title', 'content', 'ord',
   'properties', 'state', 'keywords', 'i18nKeywords', 'labels', 'ranges',
   'region'
 ])
@@ -70,7 +70,7 @@ const ARTWORK_SEARCH_SELECT_PIPE = selectPipe<SearchArtworkDto>({
       val, 
       ['column', 'order'],
       {
-        limit: [['id', 'view','end',"price", 'reg_date', 'state'], ['DESC', 'ASC']],
+        limit: [['id', 'view','end',"price",'ord', 'reg_date', 'state'], ['DESC', 'ASC']],
         def: {column: 'reg_date', order: 'DESC'}
       }
     );

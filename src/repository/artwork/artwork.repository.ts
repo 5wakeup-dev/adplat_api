@@ -559,6 +559,9 @@ export class ArtworkRepository extends ChainRepository<Artwork> {
         if (column === 'view') {
           query = query.orderBy(`${this.alias}.view`, order as 'DESC' | 'ASC')
         }
+        if (column === 'ord') {
+          query = query.orderBy(`${this.alias}.ord`, order as 'DESC' | 'ASC')
+        }
 
         if (column === 'end') {
           query = query.leftJoinAndSelect(`${this.alias}.ranges`, `SRC_END_${ARTWORK_RANGES}`)
