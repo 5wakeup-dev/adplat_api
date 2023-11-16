@@ -14,7 +14,7 @@ export const sessionOptions: ExpressSession.SessionOptions = {
     ? undefined
     : {
       maxAge: 365 * 24 * 60 * 60 * 1000, // 7 days ( w day * x hour * y minute * z second * 1000<millisecond>)
-      domain: '.cafe24.com'
+      domain: '.t-moa.com'
     }
 }
 // export const mysqlSession = (session?: typeof session_ ):RequestHandler => {
