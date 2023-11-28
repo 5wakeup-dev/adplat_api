@@ -317,29 +317,29 @@ export class ArtworkRepository extends ChainRepository<Artwork> {
       ,
       details: ['manager'],
       after: ({ entities, data }) => {
-        const auth = data.auth as User | Manager;
-        const isRoot = isContainRoles(auth, ['root'] as Array<DEFAULT_ROLE>);
+        // const auth = data.auth as User | Manager;
+        // const isRoot = isContainRoles(auth, ['root'] as Array<DEFAULT_ROLE>);
 
-        entities.forEach(entity => {
-          const isOwner = isSameAuth(entity.manager, auth);
-          if (entity.state === COMM_STATE.NORMAL)
-            return;
-          else if (!isRoot && !isOwner) {
-            keysTypeGuard(entity).forEach(key => {
-              const field = entity[key]
-              if (isUndeclared(field) || field instanceof Date)
-                return;
-              else if (['state', 'uk', 'id'].includes(key)) { /* TODO document why this block is empty */ }
-              else if (typeof field === 'string')
-                entity[key] = UNKNOWN as never;
-              else if (typeof field === 'number')
-                entity[key] = NaN as never;
-              else
-                entity[key] = undefined as never;
-            })
+        // entities.forEach(entity => {
+        //   const isOwner = isSameAuth(entity.manager, auth);
+        //   if (entity.state === COMM_STATE.NORMAL)
+        //     return;
+        //   else if (!isRoot && !isOwner) {
+        //     keysTypeGuard(entity).forEach(key => {
+        //       const field = entity[key]
+        //       if (isUndeclared(field) || field instanceof Date)
+        //         return;
+        //       else if (['state', 'uk', 'id'].includes(key)) { /* TODO document why this block is empty */ }
+        //       else if (typeof field === 'string')
+        //         entity[key] = UNKNOWN as never;
+        //       else if (typeof field === 'number')
+        //         entity[key] = NaN as never;
+        //       else
+        //         entity[key] = undefined as never;
+        //     })
 
-          }
-        })
+        //   }
+        // })
       }
     }
     ,
