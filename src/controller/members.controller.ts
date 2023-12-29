@@ -96,7 +96,7 @@ export class MembersController {
 
       return new ManagerRes(this.membersService.checkAuth(auth, 'Manager'));
     } else {
-      await repos.user.setProperty({details: ['basic'], data: {auth}}, [auth]);
+      await repos.user.setProperty({details: ['basic','store.storeMemo'], data: {auth}}, [auth]);
 
       return new UserRes(this.membersService.checkAuth(auth, 'User'))
     }

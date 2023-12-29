@@ -218,11 +218,12 @@ export class ConsultingsController {
   @Get('/check/:consulting_uk')
   async getCheckPassword(
     @Param('consulting_uk') consultingUk: string,
+    @Auth() auth: Manager|User,
     @Headers('check-password') checkPassword: string
   ): Promise<boolean> {
     checkPassword = checkPassword ? decodeURIComponent(checkPassword) : null;
 
-    return this.consultingsService.getCheckConsulting(consultingUk, checkPassword)
+    return this.consultingsService.getCheckConsulting(consultingUk, checkPassword,auth)
       
   }
 

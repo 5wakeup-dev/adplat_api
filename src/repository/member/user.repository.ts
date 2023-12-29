@@ -9,11 +9,14 @@ import { aesEnc } from "src/util/secret.util";
 import { ChainRelation, ChainRepository, PathString, SaveSubscriber, SetPropertyEvent } from "src/util/typeorm.util";
 import { EntityRepository, SelectQueryBuilder } from "typeorm";
 import { MemberBasic } from "src/entity/member/memberBasic.entity";
-import { isContainRoles, isSameAuth } from "src/util/entity.util";
+import { ENTITY_CONSTANTS, isContainRoles, isSameAuth } from "src/util/entity.util";
 import { DEFAULT_ROLE } from "src/entity/role/role.interface";
 import { UserHistory } from "src/entity/member/userHistory.entity";
 import { MemberBasicRepository } from "./basic.repository";
 import { hideTextExclude } from "src/util/format.util";
+import { Store } from "src/entity/member/store.entity";
+import { StoreRepository } from "./store.repository";
+import { setReflectProperty } from "src/util/reflect.util";
 
 
 const {
@@ -77,6 +80,11 @@ export class UserRepository extends ChainRepository<User> {
       //   .where(`${MEMBER_BASICS}.user IN (:ids)`, {ids: selfEntities.map( ({id}) => id)})
       //   .getMany()
     },
+    store: {
+      Entity: Store, Repository: StoreRepository,
+      getBridges: async ({selfEntities}) =>
+        selfEntities.map( ({id}) => ({self:{id}, inverse: {id}}))
+    },
     histories: {
       Entity: UserHistory, fieldIsMany: true,
       getBridges: ({ entityManager: em, selfEntities }) => 
@@ -117,6 +125,18 @@ export class UserRepository extends ChainRepository<User> {
   public readonly setPropertySubscriber: Array<SetPropertyEvent<User, PathString<User>>> = [
     {
       where: ({ data }) => data.auth !== undefined,
+      before: ({entities}) => {
+        entities.forEach( (entity,i) => {
+          entities.splice(i, 1, new Proxy(entity, {
+            set(obj, prop, val) {
+              if( ([ 'store', 'basic' ] as Array<keyof User>).includes(prop as any) )
+                setReflectProperty(obj, val, ENTITY_CONSTANTS.AUTH)
+              obj[prop] = val;
+              return true;
+            }
+          }))
+        })
+      },
       after: ({ entities, data }) => {
 
         const {auth} = data||{},
@@ -131,9 +151,9 @@ export class UserRepository extends ChainRepository<User> {
               excludeLength: entity.identity.length - 2
             });
             entity.histories = undefined;
-            if(entity.basic) {
-              entity.basic.connectingInfo = undefined;
-            }
+            // if(entity.basic) {
+            //   entity.basic.connectingInfo = undefined;
+            // }
           }
         })
 
@@ -143,8 +163,8 @@ export class UserRepository extends ChainRepository<User> {
 
   public readonly saveSubscribe: SaveSubscriber<User, PathString<User>> 
 
-  public searchQuery( {
-    uk, identity, nickname, roles, snsUk, snsType, state, name, tel
+  public searchQuery( {storeState,
+    uk, identity, nickname, roles, snsUk, snsType, state, name, tel,onlyStore
   }: SearchUserDto = {}): SelectQueryBuilder<User> {
     let query = this.createQueryBuilder(this.alias);
 
@@ -182,6 +202,13 @@ export class UserRepository extends ChainRepository<User> {
         query = query.andWhere(`SRC_${MEMBER_BASICS}.tel LIKE :tel`, {tel: `%${tel}%`})
       }
     }
+    if(onlyStore){
+    query= query.leftJoin(`${this.alias}.store`,`USR_STR`).andWhere(`USR_STR.id is not null`)
+    console.log(storeState)
+    if( storeState?.length > 0 ) {
+      query = query.andWhere(`USR_STR.state IN (:storeState)`, {storeState});
+    }
+  }
         
     return query;
   }

@@ -50,17 +50,9 @@ export class MemberBasic {
   @Column({ length: 1024 })
   memo: string;
 
-  @Column({ length: 512 })
-  connectingInfo: string;
+  // @Column({ length: 512 })
+  // connectingInfo: string;
 
-  @Column({ nullable: false })
-  score: number;
-
-  @Column({ nullable: false })
-  isVulnerable: boolean;
-
-  @Column({ nullable: false })
-  isCertifySchool: boolean;
 
   @Column({ length: 256 })
   withdrawalReason: string;
@@ -101,10 +93,6 @@ export class MemberBasicRes {
   birth?: number;
   allowNotification: boolean;
   memo?: string;
-  connectingInfo?: string;
-  score: number;
-  isVulnerable: boolean;
-  isCertifySchool: boolean;
   withdrawalReason: string;
   upt_date?: number;
   reg_date: number;
@@ -116,8 +104,8 @@ export class MemberBasicRes {
       name, gender, year, birth, 
       allowNotification, memo,
       upt_date, reg_date, 
-      attachmentProfile, connectingInfo, score,
-      isVulnerable, isCertifySchool, withdrawalReason
+      attachmentProfile,
+     withdrawalReason
     }: MemberBasic
   ){
     this.id = id;
@@ -134,10 +122,7 @@ export class MemberBasicRes {
       this.birth = birth.getTime();
     this.allowNotification = allowNotification;
     this.memo = memo;
-    this.connectingInfo = connectingInfo;
-    this.score = score;
-    this.isVulnerable = isVulnerable;
-    this.isCertifySchool = isCertifySchool;
+
     this.withdrawalReason = withdrawalReason;
     if( upt_date )
       this.upt_date = upt_date.getTime();

@@ -141,9 +141,10 @@ export class MembersService {
           result[key] = managerFilter.filter(mng => mng.basic?.email === val).length
         } else if(key === 'tel') {
           result[key] = managerFilter.filter(mng => mng.basic?.tel === val).length
-        } else if(key === 'connectingInfo') {
-          result[key] = managerFilter.filter(mng => mng.basic?.connectingInfo === val).length;
-        }
+        } 
+        // else if(key === 'connectingInfo') {
+        //   result[key] = managerFilter.filter(mng => mng.basic?.connectingInfo === val).length;
+        // }
   
         return result;
       }, {})
@@ -393,7 +394,7 @@ export class MembersService {
         throw BASIC_EXCEPTION.ALREADY_BEAN_COMPLETED;
       }
       if(manager.basic) {
-        await repos.rawBasic.save({id: manager.basic?.id,connectingInfo:manager.basic.connectingInfo?"0":undefined, withdrawalReason});
+        await repos.rawBasic.save({id: manager.basic?.id, withdrawalReason});
       }
       return repos.rawManager.save({id: manager.id, state: deleteState})
         .then(() => Object.assign(
@@ -404,7 +405,7 @@ export class MembersService {
         throw BASIC_EXCEPTION.ALREADY_BEAN_COMPLETED;
       }
       if(user.basic) {
-        await repos.rawBasic.save({id: user.basic?.id,connectingInfo:user.basic.connectingInfo?"0":undefined, withdrawalReason});
+        await repos.rawBasic.save({id: user.basic?.id, withdrawalReason});
       }
       return repos.rawUser.save({id: user.id, state: -2})
         .then(() => Object.assign(

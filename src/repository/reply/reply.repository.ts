@@ -19,7 +19,7 @@ import { UserRepository } from "../member/user.repository";
 const {
   REPLIES,
   REPLY_HIERARCHICAL,
-  ARTWORKS, CONSULTINGS, INSTRUMENT_MARKET,
+  ARTWORKS, CONSULTINGS, ARTWORK_HIERARCHICAL,
   MANAGERS, USERS
 } = TABLE_ALIAS;
 
@@ -166,7 +166,10 @@ export class ReplyRepository extends ChainRepository<Reply> {
       }
       //추후 다른 정렬 기준에 대해서 추가 가능.
     } else {
-      query = query.orderBy(`${this.alias}.reg_date`, 'DESC')
+      query=query.leftJoinAndSelect(`${this.alias}.hierarchical`, ARTWORK_HIERARCHICAL)
+      .orderBy(`${ARTWORK_HIERARCHICAL}.groupId`, 'ASC')
+      .addOrderBy(`${ARTWORK_HIERARCHICAL}.groupOrd`, 'ASC')
+      // query = query.orderBy(`${this.alias}.reg_date`, 'DESC')
     }
 
     if(depth || parent) {

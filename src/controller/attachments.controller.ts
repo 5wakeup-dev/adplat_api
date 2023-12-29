@@ -11,6 +11,7 @@ import { RequestAttachmentType } from "src/entity/comm/comm.interface";
 import { Manager } from "src/entity/member/manager.entity";
 import { Auth } from "src/decorator/auth.decorator";
 import { BASIC_EXCEPTION } from "src/exception/basic.exception";
+import { Member } from "src/entity/member/member.interface";
 
 
 const BOOLEAN_PIPE = dynamicPipe<any, boolean>(({ value: val }) => {
@@ -83,7 +84,7 @@ export class AttachmentsController {
   **/
   @Get(':attachment_id')
   async getFile(
-    @Auth(Manager) auth: Manager,
+    @Auth() auth:Member,
     @Param('attachment_id') id: string,
     @Res() res: Response,
     @Query('size', NUMBER_PIPE) size?: number,

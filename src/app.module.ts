@@ -38,7 +38,6 @@ import { ReserveRequestModule } from './module/reserveRequest.module';
 import { CronTasksModule } from './module/cronTasks.module';
 import { NetAddressSubscriber } from './interceptor/netAddress.subscriber';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -84,7 +83,6 @@ import { NetAddressSubscriber } from './interceptor/netAddress.subscriber';
     CronTasksModule,
     // IamportModule,
     KeywordsModule,
-    
     BlockMembersModule,
     ReserveRequestModule
   ],
@@ -97,8 +95,6 @@ import { NetAddressSubscriber } from './interceptor/netAddress.subscriber';
     catchMustBeEntityErrorFilter,
     catchQueryFiledErrorFilter,
     /** Error Filter E N D */
-    
-
 
     /** typeorm subscribers START */
     RoleSubscriber,

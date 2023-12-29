@@ -266,7 +266,7 @@ export class ConsultingsService {
         ? !this.getBranchAllow(root, consulting, auth, checkPassword)
         : !this.getConsultingAllow(consulting, auth, checkPassword)
       )
-    ){
+    ) {
       throw BASIC_EXCEPTION.NOT_ALLOW_AUTH;
     }
 
@@ -279,7 +279,7 @@ export class ConsultingsService {
 
 
   async getCheckConsulting(
-    consultingUk: string, checkPassword?: string
+    consultingUk: string, checkPassword?: string, auth?: User | Manager
   ): Promise<boolean> {
     if (!consultingUk) {
       throw BASIC_EXCEPTION.EMPTY_CONTENT;
@@ -289,11 +289,13 @@ export class ConsultingsService {
       consulting: ConsultingRepository
     }, this.connection.manager);
 
-    const consulting = await repos.consulting.searchQuery({ uk: consultingUk }).getOne()
+    const consulting = await repos.consulting.getOne(["user"], ctx => ctx.searchQuery({ uk: consultingUk }));
 
 
 
-
+    if (consulting.user && auth) {
+      return consulting.user.uk === auth.uk
+    }
     return consulting.password === checkPassword
   }
 
@@ -437,10 +439,12 @@ export class ConsultingsService {
       else { //회원이 쓴 게시물의 경우
         if (consulting.manager) { //manager가 쓴 게시물
           if (!isSameAuth(consulting.manager, auth)) { //게시물 작성자와 auth가 동일하지 않을 경우
+            consulting.title = '비밀글입니다.';
             consulting.content = '비밀글입니다.';
           }
-        } else { //user가 쓴 게시물
+        } else if(consulting.user){ //user가 쓴 게시물
           if (!isSameAuth(consulting.user, auth)) { //게시물 작성자와 auth가 동일하지 않을 경우
+            consulting.title = '비밀글입니다.';
             consulting.content = '비밀글입니다.';
           }
         }

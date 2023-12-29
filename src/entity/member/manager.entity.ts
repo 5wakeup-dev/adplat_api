@@ -5,6 +5,7 @@ import { ManagerHistory, ManagerHistoryRes } from "./managerHistories.entity";
 import { MemberBasic, MemberBasicDto, MemberBasicReq, MemberBasicRes } from "./memberBasic.entity";
 import { MemberDeviceToken, MemberDeviceTokenRes } from "./memberDeviceToken.entity";
 import { MemberSns } from "./memberSns.entity";
+import { Store, StoreDto, StoreReq, StoreRes } from "./store.entity";
 
 @Entity({ name: 'managers' })
 export class Manager {
@@ -40,37 +41,40 @@ export class Manager {
   reg_date: Date;
 
 
-  @ManyToMany(_ => Role, {eager: true})
+  @ManyToMany(_ => Role, { eager: true })
   @JoinTable({
     name: 'manager_and_role',
-    joinColumn: {name: 'manager_id', referencedColumnName: 'id'},
-    inverseJoinColumn: {name: 'role_id', referencedColumnName: 'id'}
+    joinColumn: { name: 'manager_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' }
   })
   roles: Array<Role>;
 
-  @OneToMany( () => MemberSns, entity => entity.manager )
+  @OneToMany(() => MemberSns, entity => entity.manager)
   sns?: Array<MemberSns>;
-  
+
   type: 'Manager';
 
-  @OneToOne( () => MemberBasic, entity => entity.manager, { cascade: ['insert', 'update'] } )
+  @OneToOne(() => MemberBasic, entity => entity.manager, { cascade: ['insert', 'update'] })
   basic: MemberBasic;
 
+  // @OneToOne(() => Store, entity => entity.manager, { cascade: ['insert', 'update'] })
+  // store?: Store;
 
-  @OneToMany( () => ManagerHistory, entity => entity.manager )
+  @OneToMany(() => ManagerHistory, entity => entity.manager)
   histories?: Array<ManagerHistory>;
-  
 
-  @OneToOne( () => MemberDeviceToken, entity => entity.manager, { cascade: ['insert', 'update'] } )
+
+  @OneToOne(() => MemberDeviceToken, entity => entity.manager, { cascade: ['insert', 'update'] })
   deviceToken?: MemberDeviceToken;
 }
 
 
 export type ManagerDto = Partial<
   Replace<
-    Omit<Manager, 'sns'|'histories'>,
+    Omit<Manager, 'sns' | 'histories'>,
     {
       // roles: Array<Role>;
+      store?: StoreDto;
       basic: MemberBasicDto;
     }
   >
@@ -85,12 +89,11 @@ export class ManagerRes {
   state: number;
   upt_date?: number;
   reg_date: number;
-  
+
   roles?: Array<string>;
   sns?: Array<string>;
   basic?: MemberBasicRes;
   histories?: Array<ManagerHistoryRes>;
-
 
   type: 'Manager';
 
@@ -98,7 +101,7 @@ export class ManagerRes {
 
   constructor(
     {
-      id, uk, identity, nickname, state, 
+      id, uk, identity, nickname, state,
       upt_date, reg_date,
       roles, sns, basic, histories,
       type,
@@ -111,25 +114,24 @@ export class ManagerRes {
     // this.password = password;
     this.nickname = nickname;
     this.state = state;
-    if( upt_date )
+    if (upt_date)
       this.upt_date = upt_date.getTime()
 
     this.reg_date = reg_date.getTime();
-    
-    if( roles )
-      this.roles = roles.map( ({key: rKey}) => rKey);
-    if( sns )
-      this.sns = sns.map( ({type: sType}) => sType);
-    if( basic )
-      this.basic = new MemberBasicRes(basic);
-  
 
-    if( histories )
-      this.histories = histories.map( his => new ManagerHistoryRes(his) );
+    if (roles)
+      this.roles = roles.map(({ key: rKey }) => rKey);
+    if (sns)
+      this.sns = sns.map(({ type: sType }) => sType);
+    if (basic)
+      this.basic = new MemberBasicRes(basic);
+
+    if (histories)
+      this.histories = histories.map(his => new ManagerHistoryRes(his));
 
     this.type = type;
 
-    if(deviceToken) {
+    if (deviceToken) {
       this.deviceToken = new MemberDeviceTokenRes(deviceToken);
     }
   }
@@ -137,11 +139,12 @@ export class ManagerRes {
 
 export type ManagerReq = Partial<
   Replace<
-    Omit<ManagerRes, 'type'|'sns'|'histories'|'deviceToken'>, 
+    Omit<ManagerRes, 'type' | 'sns' | 'histories' | 'deviceToken'>,
     {
       checkPassword: string;
+      store: StoreReq;
       basic: MemberBasicReq;
-    
+
     }
   >
 >

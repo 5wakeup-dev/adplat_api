@@ -1,10 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req } from "@nestjs/common";
-import * as dayjs from "dayjs";
 import { Request } from 'express';
-import { TABLE_ALIAS, UK_PREFIX } from "src/config/typeorm.config";
+import { TABLE_ALIAS } from "src/config/typeorm.config";
 import { Auth, setAuth } from "src/decorator/auth.decorator";
 import { setSnsProvided, SnsProvided } from "src/decorator/snsToken.decorator";
-import { ConsultingDto } from "src/entity/consulting/consulting.entity";
 import { Manager, ManagerDto, ManagerReq, ManagerRes } from "src/entity/member/manager.entity";
 import { MemberSignInDto, SearchManagerDto } from "src/entity/member/member.interface";
 import { User } from "src/entity/member/user.entity";
@@ -14,15 +12,13 @@ import { dynamicPipe } from "src/pipe/dynamic.pipe";
 import { fitPipe } from "src/pipe/fit.pipe";
 import { selectPipe } from "src/pipe/select.pipe";
 import { ManagerRepository } from "src/repository/member/manager.repository";
-import { MenuRepository } from "src/repository/menu/menu.repository";
 import { AttachmentsService } from "src/service/attachments.service";
-import { ConsultingsService } from "src/service/consultings.service";
 import { ManagersService } from "src/service/managers.service";
 import { MembersService } from "src/service/members.service";
 import { getProject } from "src/singleton/project.singleton";
 import { AUTH_RELATION_PATH, getSnsUnique, isContainRoles, isSameAuth, managerUtil, ProvidedSnsInfo } from "src/util/entity.util";
 import { ListPageRes } from "src/util/entity/listPage";
-import { createUuid, hideTextExclude, UNKNOWN, YYYYMMDDHHmmss } from "src/util/format.util";
+import { hideTextExclude } from "src/util/format.util";
 import { initArray, initBoolean, initNumber, otherDelete } from "src/util/index.util";
 import { getRepositories, PathString } from "src/util/typeorm.util";
 import { Connection } from "typeorm";
@@ -35,7 +31,7 @@ const BOOLEAN_PIPE = dynamicPipe<any, boolean>(({ value: val }) => {
   return val === '' ? true : initBoolean(val)
 })
 const MANAGER_FIT_PIPE = fitPipe<ManagerReq>([
-  'identity', 'nickname', 'checkPassword', 'password', 'roles', 'state', 'basic',
+  'identity', 'nickname', 'checkPassword', 'password', 'roles', 'state', 'basic','store'
  
 ])
 const MANAGER_SELECT_PIPE = selectPipe<ManagerReq>({
@@ -45,6 +41,14 @@ const MANAGER_SELECT_PIPE = selectPipe<ManagerReq>({
       'tel', 'email', 'primaryAddress', 'secondaryAddress',
       'name', 'gender', 'birth', 'attachmentProfile',
       'allowNotification', 'memo'
+    ]
+  ),
+  store: ( _, val ) => otherDelete(
+    val,
+    [
+      'business', 'businessNumber', 'ceo', 
+      'address1', 'address2', 'tel', 'email', 
+      'storeMemo','state','url'
     ]
   )
 })
@@ -241,7 +245,7 @@ export class ManagersController {
 
         for (const item of list) {
           if (item.basic) {
-            item.basic.connectingInfo = undefined;
+            // item.basic.connectingInfo = undefined;
           }
           item.identity = hideTextExclude({
             text: item.identity,

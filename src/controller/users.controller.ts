@@ -22,43 +22,54 @@ import { dividePipe } from 'src/pipe/divide.pipe';
 import { ListPageRes } from 'src/util/entity/listPage';
 import { hideTextExclude } from 'src/util/format.util';
 
-const ALLOW_USER_ROLES = [ 'member' ] as Array<DEFAULT_ROLE>;
+const ALLOW_USER_ROLES = ['store', 'member'] as Array<DEFAULT_ROLE>;
 
 const MEMBER_SIGN_FIT_PIPE = fitPipe<MemberSignInDto>(['identity', 'password'])
-const BOOLEAN_PIPE = dynamicPipe<any, boolean>( ({value: val}) => {
+const BOOLEAN_PIPE = dynamicPipe<any, boolean>(({ value: val }) => {
   return val === '' ? true : initBoolean(val)
 })
 const USER_FIT_PIPE = fitPipe<UserReq>([
-  'identity', 'nickname', 'checkPassword', 'password', 'roles', 'state', 'basic', 'histories'
+  'identity', 'nickname', 'checkPassword', 'password', 'roles', 'state', 'basic', 'histories', 'store'
 ])
 
 const USER_SELECT_PIPE = selectPipe<UserReq>({
-  basic: ( _, val ) => otherDelete(
-    val, 
+  basic: (_, val) => otherDelete(
+    val,
     [
-      'tel', 'email', 'primaryAddress', 'secondaryAddress', 
+      'tel', 'email', 'primaryAddress', 'secondaryAddress',
       'name', 'gender', 'birth', 'attachmentProfile',
       'allowNotification', 'memo'
+    ]
+  ),
+  store: (_, val) => otherDelete(
+    val,
+    [
+      'business', 'businessNumber', 'ceo','attachment','rejectMemo',
+      'address1', 'address2', 'tel', 'email','applyDate',
+      'storeMemo', 'state', 'url'
     ]
   )
 })
 const USER_SEARCH_FIT_PIPE = fitPipe<SearchUserDto>([
-  'curPage', 'rowPerPage', 'pagePerBlock', 
+  'curPage', 'rowPerPage', 'pagePerBlock','onlyStore','storeState',
   'roles', 'identity', 'nickname', 'snsType', 'snsUk', 'uk', 'state',
   'name', 'isVulnerable', 'tel'
 ])
-const USER_SEARCH_NUMBER_PIPE = dynamicPipe<SearchUserDto>(({value}) => {
-  ( ['curPage', 'rowPerPage', 'pagePerBlock'] as Array<keyof SearchUserDto> )
-  .forEach( key => {
-    const val = value[key];
-    if( val !== undefined )
-      value[key] = initNumber(val) as never;
-  })
+const USER_SEARCH_NUMBER_PIPE = dynamicPipe<SearchUserDto>(({ value }) => {
+  (['curPage', 'rowPerPage', 'pagePerBlock'] as Array<keyof SearchUserDto>)
+    .forEach(key => {
+      const val = value[key];
+      if (val !== undefined)
+        value[key] = initNumber(val) as never;
+    })
   return value;
 })
 const USER_SEARCH_SELECT_PIPE = selectPipe<SearchUserDto>({
-  roles: ( _, val) => Array.isArray(val) ? val : [val],
-  state: (_, val) => initArray(val)
+  roles: (_, val) => Array.isArray(val) ? val : [val],
+  state: (_, val) => initArray(val),
+  storeState: (_, val) => initArray(val),
+  onlyStore: (_, val) => val as any === '' ? true : initBoolean(val),
+
 })
 
 @Controller('/users')
@@ -68,7 +79,7 @@ export class UsersController {
     private usersService: UsersService,
     private membersService: MembersService,
     private attachmentsService: AttachmentsService,
-    ){}
+  ) { }
 
   @Post()
   async postUser(
@@ -76,37 +87,47 @@ export class UsersController {
       USER_FIT_PIPE, USER_SELECT_PIPE
     ) body: UserReq,
     @Req() req: Request,
-    @Auth() auth: User|Manager,
+    @Auth() auth: User | Manager,
     @Query('sns', BOOLEAN_PIPE) sns: boolean,
     @SnsProvided() snsInfo: ProvidedSnsInfo
   ): Promise<UserRes> {
     const prj = getProject();
 
-    if(auth && !isContainRoles(auth, ['root'] as Array<DEFAULT_ROLE>)) {
+    if (auth && !isContainRoles(auth, ['root'] as Array<DEFAULT_ROLE>)) {
       setSnsProvided(req, null);
       setAuth(req, null);
       auth = null;
     }
 
     const dto: UserDto = await userUtil.reqToDto(
-      body, 
+      body,
       {
-        dataBaseRoles: prj.ROLES.filter( ({key}) => ALLOW_USER_ROLES.includes(key as any) ), 
+        dataBaseRoles: prj.ROLES.filter(({ key }) => ALLOW_USER_ROLES.includes(key as any)),
         attachmentsService: this.attachmentsService,
-        transaction: {connection: this.connection, entityManager: this.connection.manager}
+        transaction: { connection: this.connection, entityManager: this.connection.manager }
       }
     )
-    if( sns && (!dto.identity || !dto.password) ){
+    if (sns && (!dto.identity || !dto.password)) {
       const unique = getSnsUnique(snsInfo);
-      [ 'identity', 'password' ].forEach( key => {
-        if( !dto[key] )
+
+      ['identity', 'password'].forEach(key => {
+        if (!dto[key])
           dto[key] = unique;
       })
+      dto.nickname = snsInfo.nickname || "회원";
+      dto.basic.name = snsInfo.name || "회원";
+      dto.basic.email = snsInfo.email;
+      dto.basic.tel = snsInfo.tel
+      dto.basic.gender = snsInfo.gender === "male" ? 1 : 2;
     }
 
     return this.usersService.createUserAndSns(
       dto, sns, snsInfo, auth
-    ).then( u => new UserRes(u) );
+    ).then(u => {
+      setAuth(req, u);
+      setSnsProvided(req, null);
+      return new UserRes(u)
+    });
   }
 
   @Post('/sign/in')
@@ -118,16 +139,16 @@ export class UsersController {
     @SnsProvided() snsInfo: ProvidedSnsInfo,
     @Req() req: Request
   ): Promise<UserRes> {
-    const checkAuth: MemberSignInDto|ProvidedSnsInfo = sns 
-    ? snsInfo
-    : body
+    const checkAuth: MemberSignInDto | ProvidedSnsInfo = sns
+      ? snsInfo
+      : body
 
     return this.usersService.postSignIn(checkAuth)
-    .then( usr => {
-      setAuth(req, usr);
-      setSnsProvided(req, null);
-      return new UserRes(usr);
-    })
+      .then(usr => {
+        setAuth(req, usr);
+        setSnsProvided(req, null);
+        return new UserRes(usr);
+      })
   }
 
   @Delete('/sign/out')
@@ -136,10 +157,10 @@ export class UsersController {
     @Auth(User) auth
   ): Promise<number> {
     setSnsProvided(req, null);
-    if( auth ){
+    if (auth) {
       setAuth(req, null);
       return 1;
-    }else
+    } else
       return 0
   }
 
@@ -148,7 +169,7 @@ export class UsersController {
     @Auth(User) auth: User
   ): Promise<UserRes> {
 
-    return new UserRes( this.membersService.checkAuth(auth, 'User') );
+    return new UserRes(this.membersService.checkAuth(auth, 'User'));
   }
 
   @Get('/page')
@@ -159,52 +180,52 @@ export class UsersController {
       USER_SEARCH_SELECT_PIPE
     ) search: SearchUserDto,
     @Auth(Manager) auth: Manager,
-    @Query( 
+    @Query(
       'detail', dividePipe()
     ) details: Array<PathString<User>>
   ): Promise<ListPageRes<UserRes>> {
 
     return this.usersService.getUserListPage(search, auth)
-    .then( async ({page, list}) => {
+      .then(async ({ page, list }) => {
 
-      await this.connection.getCustomRepository(UserRepository)
-      .setProperty(
-        { details, data: {auth} },
-        list
-      );
+        await this.connection.getCustomRepository(UserRepository)
+          .setProperty(
+            { details, data: { auth } },
+            list
+          );
 
-      return {
-        page,
-        list: list.map( mng => new UserRes(mng) )
-      }
-    })
+        return {
+          page,
+          list: list.map(mng => new UserRes(mng))
+        }
+      })
   }
 
   @Get('/:user_uk')
   async getManager(
     @Param('user_uk') userUk: string,
-    @Auth() auth: User|Manager,
-    @Query( 
+    @Auth() auth: User | Manager,
+    @Query(
       'detail', dividePipe()
     ) details: Array<PathString<User>>,
   ): Promise<UserRes> {
     const repos = getRepositories({
       user: UserRepository
     }, this.connection.manager);
-    const origin: User = await repos.user.searchQuery({uk: userUk})
-    .getOne();
+    const origin: User = await repos.user.searchQuery({ uk: userUk })
+      .getOne();
     return this.usersService.getUser(origin)
-    .then( async mng => 
-      repos.user.setProperty(
-        { details, data: {auth} },
-        [ mng ]
-      ).then( () => new UserRes(mng) )
-    )
+      .then(async mng =>
+        repos.user.setProperty(
+          { details, data: { auth } },
+          [mng]
+        ).then(() => new UserRes(mng))
+      )
   }
 
   @Patch(['', '/:user_uk'])
   async patchUser(
-    @Param('user_uk') userUk: string|undefined,
+    @Param('user_uk') userUk: string | undefined,
     @Body(
       USER_FIT_PIPE,
       USER_SELECT_PIPE
@@ -212,9 +233,9 @@ export class UsersController {
     @Query('sns', BOOLEAN_PIPE) sns: boolean,
     @SnsProvided() snsInfo: ProvidedSnsInfo,
     @Req() req: Request,
-    @Auth() auth: User|Manager
+    @Auth() auth: User | Manager
   ): Promise<UserRes> {
-    
+
     // const transaction = {connection: this.connection, entityManager: this.connection.manager}
     const repos = getRepositories({
       user: UserRepository
@@ -222,56 +243,55 @@ export class UsersController {
     const prj = getProject();
 
     const origin: User = await repos.user
-    .getOne(
-      [ 'basic', 'histories' ],
-      ctx => userUk 
-      ? ctx.searchQuery( {uk: userUk})
-      : ctx.searchQuery()
-        .where(`${ctx.alias}.id = :id`, {id: auth?.id||'NULL'})
-    );
+      .getOne(
+        ['basic', 'store.attachment', 'histories'],
+        ctx => userUk
+          ? ctx.searchQuery({ uk: userUk })
+          : ctx.searchQuery()
+            .where(`${ctx.alias}.id = :id`, { id: auth?.id || 'NULL' })
+      );
+    const checkAuth = sns
+      ? snsInfo
+      : { identity: origin?.identity, password: body.checkPassword }
 
-    const checkAuth = sns 
-    ? snsInfo 
-    : { identity: origin?.identity, password: body.checkPassword}
 
-        
     const dto: UserDto = await userUtil.reqToDto(
-      body, 
+      body,
       {
-        origin, 
-        dataBaseRoles: prj.ROLES.filter( ({key}) => ALLOW_USER_ROLES.includes(key as any) ), 
+        origin,
+        dataBaseRoles: prj.ROLES.filter(({ key }) => ALLOW_USER_ROLES.includes(key as any)),
         attachmentsService: this.attachmentsService,
-        transaction: {connection: this.connection, entityManager: this.connection.manager}
+        transaction: { connection: this.connection, entityManager: this.connection.manager }
       }
     );
 
-    return this.usersService.patchUser(origin, dto, checkAuth, auth )
-    .then( async usr => {
-      if( isSameAuth(usr, auth) )
-        await repos.user.getOne(
-          AUTH_RELATION_PATH,
-          ctx => ctx.searchQuery()
-            .where(`${ctx.alias}.id = :id`, {id: usr.id})
-        ).then( refresh => setAuth(req, refresh))
+    return this.usersService.patchUser(origin, dto, checkAuth, auth)
+      .then(async usr => {
+        if (isSameAuth(usr, auth))
+          await repos.user.getOne(
+            AUTH_RELATION_PATH,
+            ctx => ctx.searchQuery()
+              .where(`${ctx.alias}.id = :id`, { id: usr.id })
+          ).then(refresh => setAuth(req, refresh))
 
-      setSnsProvided(req, null);
-      
-      return new UserRes(usr)
-    })
+        setSnsProvided(req, null);
+
+        return new UserRes(usr)
+      })
   }
 
   @Delete(['', '/:user_uk'])
   async deleteUser(
-    @Param('user_uk') userUk: string|undefined,
+    @Param('user_uk') userUk: string | undefined,
     @Body(
       MEMBER_SIGN_FIT_PIPE
     ) body: MemberSignInDto,
     @Query('sns', BOOLEAN_PIPE) sns: boolean,
     @SnsProvided() snsInfo: ProvidedSnsInfo,
     @Req() req: Request,
-    @Auth() auth: User|Manager
+    @Auth() auth: User | Manager
   ): Promise<number> {
-    
+
     const checkAuth = sns ? snsInfo : body;
     const repos = getRepositories({
       user: UserRepository
@@ -280,21 +300,21 @@ export class UsersController {
     const origin: User = await repos.user
       .getOne(
         undefined,
-        ctx => userUk 
-        ? ctx.searchQuery( {uk: userUk})
-        : ctx.searchQuery()
-          .where(`${ctx.alias}.id = :id`, {id: auth?.type === 'User' ? auth?.id : 'NULL'})
+        ctx => userUk
+          ? ctx.searchQuery({ uk: userUk })
+          : ctx.searchQuery()
+            .where(`${ctx.alias}.id = :id`, { id: auth?.type === 'User' ? auth?.id : 'NULL' })
       )
-    ;
+      ;
 
     return this.usersService.deleteUser(
       origin, checkAuth, auth
-    ).then( usr => {
-      if( isSameAuth(usr, auth) )
+    ).then(usr => {
+      if (isSameAuth(usr, auth))
         setAuth(req, null)
 
       setSnsProvided(req, null);
-      
+
       return 1;
     })
   }

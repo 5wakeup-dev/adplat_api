@@ -60,7 +60,9 @@ export type SearchUserDto = Partial<
     snsType: string;
     snsUk: string;
     state: Array<number>;
+    storeState:Array<number>;
     name: string;
+    onlyStore:boolean;
     isVulnerable: number;
     tel: string;
   } 

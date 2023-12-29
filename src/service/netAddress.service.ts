@@ -12,7 +12,7 @@ import { getRepositories } from "src/util/typeorm.util";
 import { Connection } from "typeorm";
 
 const {
-  SHARP_PRODUCT_VIEWS
+  
 } = TABLE_ALIAS;
 
 @Injectable()

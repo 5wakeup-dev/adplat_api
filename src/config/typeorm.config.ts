@@ -53,6 +53,8 @@ import { BlockMember } from "src/entity/blockMember/blockMember.entity"
 
 import { MemberDeviceToken } from "src/entity/member/memberDeviceToken.entity"
 import { ReserveRequest } from "src/entity/reserve/reserveRequest.entity"
+import { Store } from "src/entity/member/store.entity"
+import { StoreMemo } from "src/entity/member/storeMemo.entity"
 
 export const commEntitts = [
   ErrorEntity,
@@ -79,7 +81,8 @@ export const notificationEntities = [
 export const memberEntities = [
   Manager, ManagerHistory,
   User, UserHistory,
-  MemberBasic, MemberSns, MemberDeviceToken
+  MemberBasic, MemberSns, MemberDeviceToken,
+  Store,StoreMemo
 ] as const;
 
 export const artworkEntities = [
@@ -112,6 +115,7 @@ export const BlockMemberEntities = [
 export const ReserveRequestEntities = [
   ReserveRequest
 ]
+
 
 
 export const entities = [
@@ -228,7 +232,7 @@ export const TABLE_ALIAS = {
   NOTES: 'NTE',
   NOTE_LABELS: 'NTE_LBL',
   NOTE_LINKS: 'NTE_LNK',
-NET_ADDRESS:'NADR',
+  NET_ADDRESS:'NADR',
   ADDRESSES: 'ADR',
   SCHOOLES: 'SCR',
   SHARP_OPTIONS: 'SHP_OPT',
@@ -237,35 +241,15 @@ NET_ADDRESS:'NADR',
   INSTRUMENT_MARKET_ATTACHMENTS: 'IST_MKT_ATC',
   INSTRUMENT_MARKET_ADDRESSES: 'IST_MKT_ADR',
 
-  SHARP_PRODUCTS: 'SHP_PRD',
-  SHARP_PRODUCT_CATEGORIES: 'SHP_PRD_CTG',
-  SHARP_PRODUCT_ATTACHMENTS: 'SHP_PRD_ATC',
-  SHARP_PRODUCT_TIMES: 'SHP_PRD_TMS',
-  SHARP_PRODCUT_PERIODS: 'SHP_PRD_PRI',
-  SHARP_PRODUCT_VIEWS: 'SHP_PRD_VEW',
-  SHARP_PRODUCT_AREAS: 'SHP_PRD_ARA',
-  SHARP_PRODUCT_LEVELS: 'SHP_PRD_LVL',
-
+  
   REQUEST_PAYMENTS: 'RQP',
   REQUEST_PAYMENT_BUYER: 'RQP_BUY',
   REQUEST_PAYMENT_BANK: 'RQP_BNK',
   REQUEST_PAYMENT_REFUND: 'RQP_RFD',
   REQUEST_PAYMENT_HISTORIES: 'RQP_HIS',
 
-  SHARP_ORDERS: 'SHP_ORD',
-  SHARP_ORDER_SELLER: 'SHP_ORD_SLR',
-  SHARP_ORDER_BUYER_USER: 'SHP_ORD_BUY_USR',
-  SHARP_ORDER_BUYER_MANAGER: 'SHP_ORD_BUY_MNG',
-  SHARP_ORDER_HISTORIES: 'SHP_ORD_HIS',
-  SHARP_ORDER_STATE_HISTORIES: 'SHP_ORD_STS_HIS',
-  SHARP_ORDER_DELIVERIES: 'SHP_ORD_DLV',
-  SHARP_ORDER_DELIVERIE_BUYER_USER: 'SHP_ORD_DLV_BUY_USR',
-  SHARP_ORDER_DELIVERIE_BUYER_MANAGER: 'SHP_ORD_DLV_BUY_MNG',
-  SHARP_ORDER_DELIVERY_PRICE_HISTORIES: 'SHP_ORD_DLV_PRC_HIS',
-  SHARP_ORDER_DELIVERY_REQUEST_HISTORIES: 'SHP_ORD_DLV_REQ_HIS',
-  SHARP_ORDER_DELIVERY_HISTORIES: 'SHP_ORD_DLV_HIS',
-  SHARP_ORDER_DELIVERY_HISTORY: 'SHP_ORD_DLV_HSY',
-  SHARP_ORDER_DISCOUNTS: 'SHP_ORD_DCT',
+  STORE:"STR",
+  STORE_MEMO:"STR_MEM",
 
   SHARP_REVIEWS: 'SHP_RVW',
   SHARP_REVIEW_ATTACHMENTS: 'SHP_RVW_ATC',

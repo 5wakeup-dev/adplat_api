@@ -15,6 +15,8 @@ import { aesEnc } from "src/util/secret.util";
 import { ChainRelation, ChainRepository, PathString, SaveSubscriber, SetPropertyEvent } from "src/util/typeorm.util";
 import { EntityRepository, SelectQueryBuilder } from "typeorm";
 import { MemberBasicRepository } from "./basic.repository";
+import { Store } from "src/entity/member/store.entity";
+import { StoreRepository } from "./store.repository";
 
 
 
@@ -74,7 +76,11 @@ export class ManagerRepository extends ChainRepository<Manager> {
         .then( result => result.map( ({self, inverse}) => ({ self: {id: self}, inverse: {id: inverse}})))
       ,
     },
-   
+    // store: {
+    //   Entity: Store, Repository: StoreRepository,
+    //   getBridges: async ({selfEntities}) =>
+    //     selfEntities.map( ({id}) => ({self:{id}, inverse: {id}}))
+    // },
     histories: {
       Entity: ManagerHistory, fieldIsMany: true,
       getBridges: ({ entityManager: em, selfEntities }) => 
@@ -172,9 +178,9 @@ export class ManagerRepository extends ChainRepository<Manager> {
 
             //   })
             // }
-            if(entity.basic) {
-              entity.basic.connectingInfo = undefined;
-            }
+            // if(entity.basic) {
+            //   entity.basic.connectingInfo = undefined;
+            // }
           }
 
 

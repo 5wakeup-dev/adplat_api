@@ -51,7 +51,7 @@ export class UsersService {
     dto: UserDto, auth: User|Manager,
     transaction: TransactionHelperParam = { connection: this.connection, entityManager: this.connection.manager}
   ): Promise<User> {
-    const isContainRootOrStore = isContainRoles(dto, ['root', 'store', 'edu', 'prv', 'etc'] as Array<DEFAULT_ROLE> );
+    const isContainRootOrStore = isContainRoles(dto, ['root'] as Array<DEFAULT_ROLE> );
     const isRoot = isContainRoles(auth, ['root'] as Array<DEFAULT_ROLE> );
 
     if( !dto )
@@ -73,8 +73,8 @@ export class UsersService {
     //    || isUndeclared(check.nickname) || check.nickname > 0 
     // )
     //   throw BASIC_EXCEPTION.DUPLICATE_NICKNAME;
-    else if(!dto.basic.email || isUndeclared(check.email) || check.email > 0)
-      throw BASIC_EXCEPTION.DUPLICATE_EMAIL;
+    // else if(!dto.basic.email || isUndeclared(check.email) || check.email > 0)
+    //   throw BASIC_EXCEPTION.DUPLICATE_EMAIL;
     else if( !dto.password )
       throw BASIC_EXCEPTION.NOT_ALLOW_PASSWORD;
     else if( !isRoot ){
@@ -87,9 +87,10 @@ export class UsersService {
         //   dto.basic.tel = iamportCertificate.phone
         //     || '010-0000-0000';
         // }
-        if(!TEL_FORM.test(tel)) {
-          throw BASIC_EXCEPTION.INCORRECT_TEL;
-        }
+        
+        // if(!TEL_FORM.test(tel)) {
+        //   throw BASIC_EXCEPTION.INCORRECT_TEL;
+        // }
       }
 
       // const ciCheck = await this.membersService.CountDynamic({connectingInfo: dto.basic?.connectingInfo}, auth, transaction);
@@ -161,8 +162,10 @@ export class UsersService {
       user: UserRepository
     }, this.connection.manager);
 
-    await repos.user.setProperty([...AUTH_RELATION_PATH,"basic"], [user])
-    
+    await repos.user.setProperty([...AUTH_RELATION_PATH,'store',"basic"], [user])
+    const isStore = isContainRoles(user, ['store'] as Array<DEFAULT_ROLE>);
+
+
     const { state } = user;
     if( state === MEMBER_STATE.WAITING_REMOVE)
       throw BASIC_EXCEPTION.AUTH_STATE_IS_WAITING_REMOVE;
@@ -230,9 +233,9 @@ export class UsersService {
           //   dto.basic.tel = iamportCertificate.phone;
           // }
 
-          if(dto.basic?.connectingInfo) {
-            throw BASIC_EXCEPTION.MODIFIY_ONLY_CERTIFICATE;
-          }
+          // if(dto.basic?.connectingInfo) {
+          //   throw BASIC_EXCEPTION.MODIFIY_ONLY_CERTIFICATE;
+          // }
 
           if(!TEL_FORM.test(dto.basic.tel)) {
             throw BASIC_EXCEPTION.INCORRECT_TEL;
@@ -240,6 +243,8 @@ export class UsersService {
         }
       }
     }
+
+    if (dto.store && isOwner && !origin?.store) dto.store.state = 0
     if( dto.basic?.tel )
       dto.basic.tel = parseTel(dto.basic.tel).fullFormat;
     
@@ -249,12 +254,12 @@ export class UsersService {
         throw BASIC_EXCEPTION.DUPLICATE_TEL;
       }
     }
-    if(dto.basic?.email && dto.basic.email !== origin.basic?.email) {
-      const emailCheck = await this.membersService.CountDynamic({email: dto.basic.email}, origin, true, { connection: this.connection, entityManager });
-      if(emailCheck.email > 0) {
-        throw BASIC_EXCEPTION.DUPLICATE_EMAIL;
-      }
-    }
+    // if(dto.basic?.email && dto.basic.email !== origin.basic?.email) {
+    //   const emailCheck = await this.membersService.CountDynamic({email: dto.basic.email}, origin, true, { connection: this.connection, entityManager });
+    //   if(emailCheck.email > 0) {
+    //     throw BASIC_EXCEPTION.DUPLICATE_EMAIL;
+    //   }
+    // }
     if(dto.identity && dto.identity !== origin.identity) {
       const identityCheck = await this.membersService.CountDynamic({identity: dto.identity}, origin, true, { connection: this.connection, entityManager });
       if(identityCheck.identity > 0) {

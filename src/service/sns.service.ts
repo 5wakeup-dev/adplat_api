@@ -97,7 +97,9 @@ type NaverUser = {
   // gender?: 'M' | 'F';    // 성별
   name?: string;            // 이름
   id: string;
+  mobile?:string;
   email: string;
+  gender?:"M"|"F"
   nickname: string;         // 별명
   profile_image: string;    // 프로필 사진
 }
@@ -611,13 +613,15 @@ export class SnsService {
       const rst = defSuccess<NaverUserResponse>(res);
       if( rst.result === 'success' ){
         const { data } = rst;
-        const { id, profile_image, nickname, name } = data.response;
+        const { id, profile_image,email,mobile,gender, nickname, name } = data.response;
         return {
           accessToken: maxText(access_token, 512),
           created: new Date().getTime(),
           uk: id + '',
           type: certificationToken.certificationType,
           imgs: [profile_image],
+          gender:gender==="M"?"male":"female",
+          email,tel:mobile,
           nickname, name
         };
 

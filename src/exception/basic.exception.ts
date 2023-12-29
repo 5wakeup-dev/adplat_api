@@ -65,6 +65,8 @@ export const BASIC_EXCEPTION = {
   MODIFIY_ONLY_CERTIFICATE: new BasicException({code: 200021, message: '본인인증을 통해서만 연락처 수정이 가능합니다'}),
   EXIST_CERTIFICATE_INFO: new BasicException({code: 200022, message: '동일한 유형에 해당 인증 정보로 인증된 가입 내역이 존재합니다'}),
   AUTH_STATE_IS_WAITING_REMOVE: new BasicException({code: 200023, message: '삭제 예정인 계정입니다.'}),
+  STORE_WAITING_ALLOW: new BasicException({code: 200024, message: '승인 대기중인 계정입니다.'}),
+  STORE_NOT_ALLOW: new BasicException({code: 200025, message: '가입 거절된 계정입니다.'}),
 
   NOT_ALLOW_UPLOAD_FILES: new BasicException({code: 300002, message: '업로드할 수 없는 파일이 있습니다'}),
   INVALID_FILE: new BasicException({code:300003, message:'업로드에 실패한 파일 입니다. 다시 업로드 해보시기 바랍니다.'}),

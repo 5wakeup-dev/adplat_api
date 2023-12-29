@@ -34,6 +34,7 @@ import { oneWayEnc } from "./secret.util";
 import { ConsultingRepository } from "src/repository/consulting/consulting.repository";
 import { ReplyRepository } from "src/repository/reply/reply.repository";
 import { Range } from "src/type/index.type";
+import { StoreDto } from "src/entity/member/store.entity";
 // export const MAX_PASSWORD = 512;
 // export const MAX_IDENTITY = 128;
 export const ENTITY_CONSTANTS = {
@@ -42,7 +43,7 @@ export const ENTITY_CONSTANTS = {
 export const USER_FULL_DETAIL = ['roles', 'basic', 'sns'] as Array<PathString<User>>
 export const MANAGER_FULL_DETAIL = ['roles', 'basic', 'sns'] as Array<PathString<Manager>>
 export const AUTH_RELATIONS = ['roles'] as Array<keyof Member>;
-export const AUTH_RELATION_PATH = ['roles'] as Array<PathString<Member>>;
+export const AUTH_RELATION_PATH = ['roles', 'store'] as Array<PathString<Member>>;
 
 
 export const ARTWORK_FULL_DETAIL = ['menu', 'manager', 'attachments', 'properties', 'i18ns'] as Array<PathString<Artwork>>
@@ -605,7 +606,7 @@ export const userUtil = {
     req: UserReq,
     { origin, dataBaseRoles, attachmentsService }: UserUtilOption = {}
   ): Promise<UserDto> => {
-    const {
+    const { store,
       roles, upt_date, reg_date, basic,
       ...other
     } = req;
@@ -619,7 +620,8 @@ export const userUtil = {
       : undefined;
 
     await Promise.all([
-      setMemberBasicToDto(dto, req, { origin, attachmentsService })
+      setMemberBasicToDto(dto, req, { origin, attachmentsService }),
+      setStoreToDto(dto, req, { origin, attachmentsService })
     ])
 
     return dto;
@@ -639,7 +641,7 @@ export const managerUtil = {
     req: ManagerReq,
     { origin, dataBaseRoles, attachmentsService, transaction }: ManagerUtilOption = {}
   ): Promise<ManagerDto> => {
-    const {
+    const { store,
       roles, upt_date, reg_date, basic, ...other
     } = req;
 
@@ -655,7 +657,9 @@ export const managerUtil = {
 
 
     await Promise.all([
-      setMemberBasicToDto(dto, req, { origin, attachmentsService })
+      setMemberBasicToDto(dto, req, { origin, attachmentsService }),
+      // setStoreToDto(dto, req, { origin })
+
     ])
 
     return dto;
@@ -714,6 +718,60 @@ const setMemberBasicToDto = async (
 
   dto.basic = basicDto;
 }
+
+
+
+
+type SetStoreToDtoOption = {
+  origin?: User
+  attachmentsService?: AttachmentsService,
+
+}
+const setStoreToDto = async (
+  dto: UserDto, req: UserReq,
+  { origin, attachmentsService }: SetStoreToDtoOption = {}
+) => {
+  if (!req.store)
+    return;
+
+  const { storeMemo, attachment, applyDate, regDate,
+    ...other
+  } = req.store;
+
+  const storeDto: StoreDto = { ...other }
+  if (storeMemo && storeMemo.length >= 0) {
+
+    storeDto.storeMemo = storeMemo.map(s => {
+      return { id: s.id, type: s.type, value: s.value }
+    })
+  }
+  else if (origin && origin.store?.storeMemo) {
+    storeDto.storeMemo = origin.store.storeMemo
+  }
+  if (origin?.store)
+    storeDto.id = origin.store.id;
+
+  if (applyDate) storeDto.applyDate = dayjs(applyDate).toDate()
+
+  const attachmentIds: Array<string> = [];
+
+  if (attachment)
+    attachmentIds.push(attachment);
+
+  const attachments = attachmentsService && attachmentIds.length > 0
+    ? await attachmentsService.getAttachmentsAndSort(attachmentIds)
+    : [];
+
+  storeDto.attachment = attachment === null
+    ? null
+    : attachments.find(({ id }) => id === attachment);
+
+  dto.store = storeDto;
+}
+
+
+
+
 
 type MenuUtilOption = {
   origin?: Menu;
@@ -831,6 +889,7 @@ export interface ProvidedSnsInfo {
   gender?: string;
   nickname?: string;
   email?: string;
+  tel?: string;
   imgs: Array<string>;
   accessToken: string;
   created: number;
@@ -919,7 +978,7 @@ export const consultingUtil = {
       dto.relation = origin?.relation || undefined;
     }
 
-    
+
     dto.properties = properties
       ? entriesTypeGuard(properties)
         .map(([pKey, pVal]) => {
@@ -1196,7 +1255,7 @@ export const notificationUtil = {
           .searchQuery({ uk: relation.note })
           .getOne();
         dto.relation = { note };
-      
+
       } else if (relation.consulting) {
         const consulting = await entityManager.getCustomRepository(ConsultingRepository)
           .searchQuery({ uk: relation.consulting })

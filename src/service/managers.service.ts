@@ -28,62 +28,62 @@ export class ManagersService {
   constructor(
     private connection: Connection,
     private membersService: MembersService,
- ){}
+  ) { }
 
-  @TransactionHelper({ paramIndex: 4, isolationLevel: 'READ UNCOMMITTED'})
+  @TransactionHelper({ paramIndex: 4, isolationLevel: 'READ UNCOMMITTED' })
   async createManagerAndSns(
-    dto: ManagerDto, sns: boolean, snsInfo: ProvidedSnsInfo, auth: User|Manager,
-    transaction: TransactionHelperParam = { connection: this.connection, entityManager: this.connection.manager}
+    dto: ManagerDto, sns: boolean, snsInfo: ProvidedSnsInfo, auth: User | Manager,
+    transaction: TransactionHelperParam = { connection: this.connection, entityManager: this.connection.manager }
   ): Promise<Manager> {
 
     const created = await this.createManager(dto, auth, transaction);
-    if(sns)
+    if (sns)
       await this.membersService.putSns(created, snsInfo, transaction)
-      .then( () => 
-        transaction.entityManager.getCustomRepository(ManagerRepository)
-        .setProperty([ 'sns' ], [ created ])
-      )
+        .then(() =>
+          transaction.entityManager.getCustomRepository(ManagerRepository)
+            .setProperty(['sns'], [created])
+        )
 
     return created;
-  } 
+  }
 
   @TransactionHelper({ paramIndex: 2, isolationLevel: 'READ UNCOMMITTED' })
   async createManager(
-    dto: ManagerDto, auth: User|Manager,
-    transaction: TransactionHelperParam = { connection: this.connection, entityManager: this.connection.manager}
+    dto: ManagerDto, auth: User | Manager,
+    transaction: TransactionHelperParam = { connection: this.connection, entityManager: this.connection.manager }
   ): Promise<Manager> {
     const prj = getProject();
-    const isContainRoot = isContainRoles(dto, ['root'] as Array<DEFAULT_ROLE> );
-    const isRoot = isContainRoles(auth, ['root'] as Array<DEFAULT_ROLE> );
+    const isContainRoot = isContainRoles(dto, ['root'] as Array<DEFAULT_ROLE>);
+    const isRoot = isContainRoles(auth, ['root'] as Array<DEFAULT_ROLE>);
 
-    if( !dto )
+    if (!dto)
       throw BASIC_EXCEPTION.NOT_ALLOW_EMPTY_ON_PROCESS;
-    else if( isContainRoot && prj.EXIST_ROOT && !isRoot )
+    else if (isContainRoot && prj.EXIST_ROOT && !isRoot)
       throw BASIC_EXCEPTION.NOT_ALLOW_AUTH;
 
-    const { 
-      identity, 
+    const {
+      identity,
       // nickname, basic, 
-      roles 
+      roles
     } = dto;
     // const roleIsRoot = isContainRoles({roles}, ['root'] as Array<DEFAULT_ROLE>);
     const check = await this.membersService.CountDynamic({
-      identity, 
+      identity,
       // nickname, 
       // email: roleIsRoot ? undefined : basic.email, 
-      isManager: true 
+      isManager: true
     }, auth, false, transaction);
 
-    if( !dto.identity || isUndeclared(check.identity) || check.identity > 0 )
+    if (!dto.identity || isUndeclared(check.identity) || check.identity > 0)
       throw BASIC_EXCEPTION.DUPLICATE_IDENTITY;
     // else if( !dto.nickname || isUndeclared(check.nickname) || check.nickname > 0 )
     //   throw BASIC_EXCEPTION.DUPLICATE_NICKNAME;
     // else if(!roleIsRoot && (!dto.basic.email || isUndeclared(check.email) || check.email > 0))
     //   throw BASIC_EXCEPTION.DUPLICATE_EMAIL;
-    else if( !dto.password )
+    else if (!dto.password)
       throw BASIC_EXCEPTION.NOT_ALLOW_PASSWORD;
-    else if( !isRoot ) {
-      if( dto?.basic?.tel){
+    else if (!isRoot) {
+      if (dto?.basic?.tel) {
         const { basic } = dto;
         // if( 
         //   ( basic?.tel && TEL_FORM.test(basic.tel) )
@@ -103,7 +103,7 @@ export class ManagersService {
         //       || '010-0000-0000';
         // }
 
-        if(
+        if (
           (basic?.tel && !TEL_FORM.test(basic.tel))
         ) {
           throw BASIC_EXCEPTION.INCORRECT_TEL;
@@ -112,34 +112,34 @@ export class ManagersService {
 
     }
 
-    if( dto.basic?.tel ) {
+    if (dto.basic?.tel) {
       dto.basic.tel = parseTel(dto.basic.tel).fullFormat;
       // const secondCheck = await this.membersService.CountDynamic({ tel: dto.basic.tel, isManager: true }, auth, transaction);
       // if(secondCheck.tel > 0) {
       //   throw BASIC_EXCEPTION.DUPLICATE_TEL;
       // }
     }
-   
 
-    dto.uk = createUuid({ prefix: `${UK_PREFIX.MANAGER}-${dayjs().format(YYYYMMDDHHmmss)}`, length: 24})
 
-    const {  entityManager } = transaction;
+    dto.uk = createUuid({ prefix: `${UK_PREFIX.MANAGER}-${dayjs().format(YYYYMMDDHHmmss)}`, length: 24 })
+
+    const { entityManager } = transaction;
     const repos = getRepositories({
       manager: ManagerRepository
     }, entityManager);
 
     return repos.manager.save(dto)
-      .then( () => 
+      .then(() =>
         repos.manager.getOne(
           MANAGER_FULL_DETAIL,
           ctx => ctx.searchQuery()
-          .where(`${ctx.alias}.id = :id`, {id: dto.id})
+            .where(`${ctx.alias}.id = :id`, { id: dto.id })
         )
       )
   }
 
-  async getManagerWhereCheckAuth( checkAuth: MemberSignInDto|ProvidedSnsInfo ): Promise<Manager> {
-    if( !checkAuth )
+  async getManagerWhereCheckAuth(checkAuth: MemberSignInDto | ProvidedSnsInfo): Promise<Manager> {
+    if (!checkAuth)
       throw BASIC_EXCEPTION.NOT_ALLOW_EMPTY_ON_PROCESS;
 
     let manager: Manager = null;
@@ -147,97 +147,105 @@ export class ManagersService {
     const repos = getRepositories({
       user: ManagerRepository
     }, this.connection.manager);
-    if( 'accessToken' in checkAuth ){
-      if( !checkAuth.type || !checkAuth.uk )
+    if ('accessToken' in checkAuth) {
+      if (!checkAuth.type || !checkAuth.uk)
         throw BASIC_EXCEPTION.NOT_FOUND_AUTH;
       const { type: snsType, uk: snsUk } = checkAuth;
       manager = await repos.user.searchQuery({ snsType, snsUk }).getOne()
 
-    }else{
-      if( !checkAuth.identity || !checkAuth.password )
+    } else {
+      if (!checkAuth.identity || !checkAuth.password)
         throw BASIC_EXCEPTION.NOT_FOUND_AUTH;
 
       const { identity, password } = checkAuth;
       manager = await repos.user.searchQuery({ identity }).getOne()
-      
-      if( !manager || manager.password !== oneWayEnc(password) )
+
+      if (!manager || manager.password !== oneWayEnc(password))
         throw BASIC_EXCEPTION.NOT_FOUND_AUTH;
     }
 
-    if( !manager )
+    if (!manager)
       throw BASIC_EXCEPTION.NOT_FOUND_AUTH;
 
     return manager;
   }
 
-  async postSignIn( checkAuth: MemberSignInDto|ProvidedSnsInfo ): Promise<Manager> {
-    const manager = await this.getManagerWhereCheckAuth( checkAuth );
+  async postSignIn(checkAuth: MemberSignInDto | ProvidedSnsInfo): Promise<Manager> {
+    const manager = await this.getManagerWhereCheckAuth(checkAuth);
     const repos = getRepositories({
       manager: ManagerRepository
     }, this.connection.manager);
 
     await repos.manager.setProperty(AUTH_RELATION_PATH, [manager])
+    const isStore = isContainRoles(manager, ['store'] as Array<DEFAULT_ROLE>);
 
     const { state } = manager;
-    if( state === MEMBER_STATE.WAITING_REMOVE)
+    if (state === MEMBER_STATE.WAITING_REMOVE)
       throw BASIC_EXCEPTION.AUTH_STATE_IS_WAITING_REMOVE;
-    if( state < MEMBER_STATE.PREPARATION)
+    if (state < MEMBER_STATE.PREPARATION)
       throw BASIC_EXCEPTION.AUTH_STATE_IS_SUSPENED;
-    else if( state === MEMBER_STATE.PREPARATION )
+    else if (state === MEMBER_STATE.PREPARATION)
       throw BASIC_EXCEPTION.AUTH_STATE_IS_DORMANCY;
-    else if( !isContainRoles(manager, ['root', 'store'] as Array<DEFAULT_ROLE>))
+    else if (!isContainRoles(manager, ['root', 'store'] as Array<DEFAULT_ROLE>))
       throw BASIC_EXCEPTION.NOT_ALLOW_AUTH;
-    
+    // if (isStore) {
+    //   const { store } = manager
+    //   if (store && store.state !== 0)
+    //     throw BASIC_EXCEPTION.STORE_WAITING_ALLOW;
+    //   else if (store && store.state !== -1)
+    //     throw BASIC_EXCEPTION.STORE_NOT_ALLOW
+    // }
+
     return manager
   }
 
-  
+
 
   @TransactionHelper({ paramIndex: 4 })
   async patchManager(
-    origin: Manager, dto: ManagerDto, 
-    checkAuth: MemberSignInDto|ProvidedSnsInfo, auth: Manager,
-    { entityManager }: TransactionHelperParam = { connection: this.connection, entityManager: this.connection.manager}
+    origin: Manager, dto: ManagerDto,
+    checkAuth: MemberSignInDto | ProvidedSnsInfo, auth: Manager,
+    { entityManager }: TransactionHelperParam = { connection: this.connection, entityManager: this.connection.manager }
   ): Promise<Manager> {
 
-    const isRoot = isContainRoles(auth, ['root'] as Array<DEFAULT_ROLE> );
+    const isRoot = isContainRoles(auth, ['root'] as Array<DEFAULT_ROLE>);
     const isOwner = isSameAuth(origin, auth);
 
-    if( !origin )
+    if (!origin)
       throw BASIC_EXCEPTION.NOT_FOUND_AUTH;
-    else if( !dto  )
+    else if (!dto)
       throw BASIC_EXCEPTION.NOT_ALLOW_EMPTY_ON_PROCESS
-    else if( !auth || (!isOwner && !isRoot) || (!isRoot && origin.state === MEMBER_STATE.WAITING_REMOVE) )
+    else if (!auth || (!isOwner && !isRoot) || (!isRoot && origin.state === MEMBER_STATE.WAITING_REMOVE))
       throw BASIC_EXCEPTION.NOT_ALLOW_AUTH;
-    if( !isRoot ){
+    if (!isRoot) {
       const {
         password: variablePassword, roles: variableRoles, state: variableState,
         nickname: variableNickname, identity: variableIdentity
       } = filterVariable(
-        getPick(origin, ['password', 'state', 'roles', 'nickname', 'identity']), 
-        {...getPick(dto, ['roles', 'state', 'nickname', 'identity']), password: dto.password ? oneWayEnc(dto.password) : undefined}
+        getPick(origin, ['password', 'state', 'roles', 'nickname', 'identity']),
+        { ...getPick(dto, ['roles', 'state', 'nickname', 'identity']), password: dto.password ? oneWayEnc(dto.password) : undefined }
       )
-      if( variablePassword ) {// 패스워드를 변경하려 하면
-        try { await this.getManagerWhereCheckAuth(checkAuth); } 
-        catch (error) { 
-          if( !checkAuth )
+      if (variablePassword) {// 패스워드를 변경하려 하면
+        try { await this.getManagerWhereCheckAuth(checkAuth); }
+        catch (error) {
+          if (!checkAuth)
             throw BASIC_EXCEPTION.NOT_ALLOW_AUTH;
-          else if( 'accessToken' in checkAuth )
+          else if ('accessToken' in checkAuth)
             throw BASIC_EXCEPTION.NOT_FOUND_SNS;
           else
-            throw BASIC_EXCEPTION.CHECK_PASSWORD; 
+            throw BASIC_EXCEPTION.CHECK_PASSWORD;
         }
       }
-      
-      if( variableRoles || (variableState && !isOwner) ) //권한을 변경하거나 상태(state)를 변경하면  
+
+      if (variableRoles || (variableState && !isOwner)) //권한을 변경하거나 상태(state)를 변경하면  
         throw BASIC_EXCEPTION.NOT_ALLOW_AUTH;
-      else if( variableIdentity && origin.histories?.some( his => his.identity ) )
+      else if (variableIdentity && origin.histories?.some(his => his.identity))
         throw BASIC_EXCEPTION.EXCEEDED_NUMBER_OF_MODIFY_IDENTITY
       // else if( variableNickname && origin.histories?.some( his => his.nickname ) )
       //   throw BASIC_EXCEPTION.EXCEEDED_NUMBER_OF_MODIFY_NICKNAME
-      else if( dto?.basic?.tel ){
+      else if (dto?.basic?.tel) {
         const { basic } = dto;
-        if( equalsTel(origin.basic?.tel, basic?.tel)){
+        if (equalsTel(origin.basic?.tel, basic?.tel)) {
           // if( 
           //   ( basic?.tel && TEL_FORM.test( basic?.tel ) ) 
           //   || (store?.tel && TEL_FORM.test( store?.tel )) 
@@ -253,11 +261,12 @@ export class ManagersService {
           //   if( storeCertification )
           //     dto.store.tel = storeCertification.phone;
           // }
-          if(basic?.connectingInfo) {
-            throw BASIC_EXCEPTION.MODIFIY_ONLY_CERTIFICATE;
-          }
 
-          if((basic?.tel && !TEL_FORM.test(basic.tel))) {
+          // if(basic?.connectingInfo) {
+          //   throw BASIC_EXCEPTION.MODIFIY_ONLY_CERTIFICATE;
+          // }
+
+          if ((basic?.tel && !TEL_FORM.test(basic.tel))) {
             throw BASIC_EXCEPTION.INCORRECT_TEL;
           }
         }
@@ -269,29 +278,29 @@ export class ManagersService {
       }, entityManager);
 
       const roleIntersection = ['prv', 'edu', 'etc'].filter(rl => origin.roles?.map(r => r.key).includes(rl));
-      
-      if(dto.basic?.tel && !equals(origin.basic?.email, dto.basic?.email)) {
+
+      if (dto.basic?.tel && !equals(origin.basic?.email, dto.basic?.email)) {
         const roleAndTelManager = await repos.manager
-          .emailRoleTelCheckQuery({role: roleIntersection[0], tel: parseTel(dto.basic?.tel).fullFormat})
+          .emailRoleTelCheckQuery({ role: roleIntersection[0], tel: parseTel(dto.basic?.tel).fullFormat })
           .getOne();
-        if(roleAndTelManager) {
+        if (roleAndTelManager) {
           throw BASIC_EXCEPTION.DUPLICATE_TEL;
         }
       }
 
-      if(dto.basic?.email && !equals(origin.basic?.email, dto.basic?.email)) {
+      if (dto.basic?.email && !equals(origin.basic?.email, dto.basic?.email)) {
         const roleAndEmailManager = await repos.manager
-          .emailRoleTelCheckQuery({role: roleIntersection[0], email: dto.basic?.email})
+          .emailRoleTelCheckQuery({ role: roleIntersection[0], email: dto.basic?.email })
           .getOne();
-        if(roleAndEmailManager) {
+        if (roleAndEmailManager) {
           throw BASIC_EXCEPTION.DUPLICATE_EMAIL;
         }
       }
     }
 
-    if( dto.basic?.tel )
+    if (dto.basic?.tel)
       dto.basic.tel = parseTel(dto.basic.tel).fullFormat;
-   
+
 
     // if(dto.basic?.tel && dto.basic.tel !== origin.basic?.tel) {
     //   const telCheck = await this.membersService.CountDynamic({tel: dto.basic.tel, isManager: true}, origin, { connection: this.connection, entityManager });
@@ -305,9 +314,9 @@ export class ManagersService {
     //     throw BASIC_EXCEPTION.DUPLICATE_EMAIL;
     //   }
     // }
-    if(dto.identity && dto.identity !== origin.identity) {
-      const identityCheck = await this.membersService.CountDynamic({identity: dto.identity, isManager: true}, origin, true, { connection: this.connection, entityManager });
-      if(identityCheck.identity > 0) {
+    if (dto.identity && dto.identity !== origin.identity) {
+      const identityCheck = await this.membersService.CountDynamic({ identity: dto.identity, isManager: true }, origin, true, { connection: this.connection, entityManager });
+      if (identityCheck.identity > 0) {
         throw BASIC_EXCEPTION.DUPLICATE_IDENTITY;
       }
     }
@@ -317,7 +326,7 @@ export class ManagersService {
     //     throw BASIC_EXCEPTION.DUPLICATE_NICKNAME;
     //   }
     // }
-      
+
     const cloneDto = deepClone(dto),
       cloneOrigin = deepClone(origin),
       variables = filterVariable(origin as Partial<ManagerDto>, cloneDto);
@@ -325,7 +334,7 @@ export class ManagersService {
     const repos = getRepositories({
       manager: ManagerRepository,
     }, entityManager);
-    return repos.manager.save( dto ).then( 
+    return repos.manager.save(dto).then(
       () => Object.assign(
         cloneOrigin,
         dto,
@@ -336,50 +345,50 @@ export class ManagersService {
 
   @TransactionHelper({ paramIndex: 3 })
   async deleteManager(
-    origin: Manager, checkAuth: MemberSignInDto|ProvidedSnsInfo, auth: Manager,
-    { entityManager }: TransactionHelperParam = { connection: this.connection, entityManager: this.connection.manager}
+    origin: Manager, checkAuth: MemberSignInDto | ProvidedSnsInfo, auth: Manager,
+    { entityManager }: TransactionHelperParam = { connection: this.connection, entityManager: this.connection.manager }
   ): Promise<Manager> {
 
-    const isRoot = isContainRoles(auth, ['root'] as Array<DEFAULT_ROLE> );
-    if( !origin )
+    const isRoot = isContainRoles(auth, ['root'] as Array<DEFAULT_ROLE>);
+    if (!origin)
       throw BASIC_EXCEPTION.NOT_ALLOW_EMPTY_ON_PROCESS;
-    if( !isRoot ){
-      if( !isSameAuth(origin, auth) )
+    if (!isRoot) {
+      if (!isSameAuth(origin, auth))
         throw BASIC_EXCEPTION.NOT_ALLOW_AUTH
 
       await this.getManagerWhereCheckAuth(checkAuth)
     }
 
     const cloneUser = deepClone(origin);
-    
+
     return entityManager.getCustomRepository(ManagerRepository)
-    .remove(origin)
-    .then( () => cloneUser );
+      .remove(origin)
+      .then(() => cloneUser);
   }
 
   async getManagerListPage(
     search: SearchManagerDto, auth: Manager
   ): Promise<ListPageRes<Manager>> {
 
-    const isRoot = isContainRoles(auth, ['root'] as Array<DEFAULT_ROLE> );
-    if( !auth || !isRoot )
+    const isRoot = isContainRoles(auth, ['root'] as Array<DEFAULT_ROLE>);
+    if (!auth || !isRoot)
       throw BASIC_EXCEPTION.NOT_ALLOW_AUTH;
-    
+
     const { curPage, rowPerPage, pagePerBlock } = search;
     const repos = getRepositories({
       manager: ManagerRepository
     }, this.connection.manager);
     const totalRow = await repos.manager.searchQuery(search)
-    .getCount()
-    if( totalRow === 0 )
+      .getCount()
+    if (totalRow === 0)
       throw BASIC_EXCEPTION.EMPTY_CONTENT;
-    const page: PageInfo = new PageInfo({curPage, rowPerPage, totalRow, pagePerBlock});
+    const page: PageInfo = new PageInfo({ curPage, rowPerPage, totalRow, pagePerBlock });
     const list = await repos.manager.getMany(
       undefined,
       ctx => ctx.searchQuery(search)
-      .skip(page.startRow)
-      .take(page.rowPerPage)
-      .orderBy(`${ctx.alias}.id`, 'DESC')
+        .skip(page.startRow)
+        .take(page.rowPerPage)
+        .orderBy(`${ctx.alias}.id`, 'DESC')
     )
 
     return { page, list };
@@ -388,7 +397,7 @@ export class ManagersService {
   async getManager(
     origin: Manager
   ): Promise<Manager> {
-    if( !origin )
+    if (!origin)
       throw BASIC_EXCEPTION.EMPTY_CONTENT;
     // else if( !auth )
     //   throw BASIC_EXCEPTION.NOT_ALLOW_AUTH;
@@ -396,14 +405,14 @@ export class ManagersService {
     //   isOwner = isSameAuth(origin, auth);
     // if( !isRoot && !isOwner )
     //   throw BASIC_EXCEPTION.NOT_ALLOW_AUTH;
-    
+
     return origin;
   }
 
   @TransactionHelper({ paramIndex: 2 })
   async getManagerWithStoreListPage(
     search: SearchManagerDto, auth: Manager | User,
-    transaction: TransactionHelperParam = {connection: this.connection, entityManager: this.connection.manager}
+    transaction: TransactionHelperParam = { connection: this.connection, entityManager: this.connection.manager }
   ): Promise<ListPageRes<Manager>> {
     const { curPage, rowPerPage, pagePerBlock } = search;
 
@@ -411,7 +420,7 @@ export class ManagersService {
       manager: ManagerRepository
     }, transaction.entityManager);
 
-    if(!search.roles || search.roles.length === 0) {
+    if (!search.roles || search.roles.length === 0) {
       search.roles = ['store', 'prv', 'edu', 'etc'];
     }
 
@@ -422,11 +431,11 @@ export class ManagersService {
       .leftJoin(`${MANAGERS}.basic`, `${MEMBER_BASICS}`)
       .andWhere(`${MEMBER_BASICS}.connectingInfo IS NOT NULL`)
       .getCount();
-    if(totalRow === 0) {
+    if (totalRow === 0) {
       throw BASIC_EXCEPTION.EMPTY_CONTENT;
     }
 
-    const page: PageInfo = new PageInfo({curPage, rowPerPage, totalRow, pagePerBlock});
+    const page: PageInfo = new PageInfo({ curPage, rowPerPage, totalRow, pagePerBlock });
 
     const list = await repos.manager
       .searchQuery(search)
@@ -437,7 +446,7 @@ export class ManagersService {
       .orderBy(`${MANAGERS}.id`, 'DESC')
       .getMany();
 
-    return {page, list};
+    return { page, list };
   }
 
   async readNewestRootUk(): Promise<string> {

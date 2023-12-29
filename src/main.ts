@@ -5,7 +5,6 @@ import { AppModule } from './app.module';
 import { initPannal } from './config/booting.config';
 import { mysqlSession } from './config/session.config';
 import { Project } from './singleton/project.singleton';
-import { SubModule } from './sub.module';
 import { setSingleton } from './util/reflect.util';
 import * as express from 'express';
 
@@ -19,20 +18,11 @@ async function bootstrap() {
     setCors(app);
     setAppFilter(app);
     const connection = app.get(Connection);
-    
     await app.listen(mainPort, async () => {
       const prj = new Project(connection);
       setSingleton( prj );
       await prj.init();
       initPannal(`Main-${process.env.NODE_ENV}`, `Port As ${mainPort}`);
-    });
-  } else if( process.env.APP === 'sub' ) {
-    const subPort = mainPort+1;
-    const subApp = await NestFactory.create(SubModule);
-    setCors(subApp);
-    setAppFilter(subApp);
-    await subApp.listen(subPort, async () => {
-      initPannal(`Sub-${process.env.NODE_ENV}`, `Port As ${subPort}`);
     });
   }
 }
