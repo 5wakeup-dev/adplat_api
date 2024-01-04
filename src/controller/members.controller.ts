@@ -84,13 +84,12 @@ export class MembersController {
 
   @Get()
   async getMemberSelf(
-    @Auth() auth: User|Manager
+    @Auth() auth: User|Manager,
   ): Promise<UserRes|ManagerRes> {
     const repos = getRepositories({
       user: UserRepository,
       manager: ManagerRepository
     }, this.connection.manager);
-    
     if(auth?.type === 'Manager') {
       await repos.manager.setProperty({details: ['basic'], data: {auth}}, [auth]);
 

@@ -146,7 +146,7 @@ export class UsersController {
     return this.usersService.postSignIn(checkAuth)
       .then(usr => {
         setAuth(req, usr);
-        setSnsProvided(req, null);
+        // setSnsProvided(req, null);
         return new UserRes(usr);
       })
   }
@@ -166,7 +166,7 @@ export class UsersController {
 
   @Get()
   async getUserSelf(
-    @Auth(User) auth: User
+    @Auth(User) auth: User,
   ): Promise<UserRes> {
 
     return new UserRes(this.membersService.checkAuth(auth, 'User'));
@@ -291,12 +291,11 @@ export class UsersController {
     @Req() req: Request,
     @Auth() auth: User | Manager
   ): Promise<number> {
-
+    
     const checkAuth = sns ? snsInfo : body;
     const repos = getRepositories({
       user: UserRepository
     }, this.connection.manager);
-
     const origin: User = await repos.user
       .getOne(
         undefined,
