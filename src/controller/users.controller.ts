@@ -117,7 +117,7 @@ export class UsersController {
       dto.nickname = snsInfo.nickname || "회원";
       dto.basic.name = snsInfo.name || "회원";
       dto.basic.email = snsInfo.email;
-      dto.basic.tel = snsInfo.tel
+      // dto.basic.tel = snsInfo.tel
       dto.basic.gender = snsInfo.gender === "male" ? 1 : 2;
     }
 

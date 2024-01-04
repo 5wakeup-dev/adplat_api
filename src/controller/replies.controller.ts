@@ -252,6 +252,7 @@ export class RepliesController {
         await repos.reply.setProperty({ details, data: { auth } }, list);
 
         for (const item of list) {
+
           if (!item.isUnlock) {
             const itemWithRelation = await repos.reply.getOne(
               ['hierarchical', 'manager', 'user'],
@@ -309,7 +310,7 @@ export class RepliesController {
               }
             }
 
-            
+
           }
         }
 
@@ -438,7 +439,7 @@ export class RepliesController {
               isPostOwner = isSameAuth(auth, parentReply.manager);
             } else if (parentReply.consulting) {
               isPostOwner = isSameAuth(auth, parentReply.consulting.manager || parentReply.consulting.user);
-            } 
+            }
 
             if (!isRoot && !isReplyOwner && !isParentReplyOwner && !isPostOwner) {
               item.content = '비밀 댓글입니다.';
@@ -533,7 +534,7 @@ export class RepliesController {
               isPostOwner = isSameAuth(auth, itemWithRelation.manager);
             } else if (itemWithRelation.consulting) {
               isPostOwner = isSameAuth(auth, itemWithRelation.consulting.manager || itemWithRelation.consulting.user);
-            } 
+            }
 
             if (!isRoot && !isReplyOwner && !isParentReplyOwner && !isPostOwner) {
               item.content = '비밀 댓글입니다.';

@@ -123,8 +123,7 @@ export class NetAddressesService {
     }
     const orgView = consulting.view;
     const consultingView = await repos.view.save({consulting, netAddress});
-    consulting.view++;
-
+    // consulting.view++;
     repos.view.createQueryBuilder('CST_VEW')
       .select('CST_VEW.netAddress')
       .where('CST_VEW.consulting = :consultingId', {consultingId: consulting.id})
@@ -132,11 +131,13 @@ export class NetAddressesService {
       .getRawMany()
       .then( async arr => {
         const count = arr.length;
-        if( orgView !== count )
+        if( orgView !== count ){
+          consulting.view=count;
           await repos.consulting.update( consulting.id, {
             view: count,
             upt_date: () => 'upt_date'
           })
+        }
       });
     
     return consultingView;

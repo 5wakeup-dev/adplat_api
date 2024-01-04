@@ -110,7 +110,7 @@ export class ConsultingsService {
     }
 
     dto.uk = createUuid({ prefix: `${UK_PREFIX.CONSULTING}-${dayjs().format(YYYYMMDDHHmmss)}`, length: 24 })
-    dto.writer = (auth ? auth.nickname : dto.writer) || '';
+    dto.writer = (auth && !dto.writer ? auth.nickname : dto.writer) || '';
     if (auth) {
       if (auth.type === 'Manager') {
         dto.manager = auth;
@@ -430,22 +430,24 @@ export class ConsultingsService {
     const isRoot = isContainRoles(auth, ['root'] as Array<DEFAULT_ROLE>);
 
     list.forEach(consulting => {
-      if (!consulting.manager && !consulting.user) { //비회원이 쓴 게시물의 경우
-        if (!isRoot && consulting.isHidden) { //게시물에 비밀번호가 설정되어 있을 경우 
-          consulting.content = '비밀글입니다.';
-          consulting.title = "비밀글입니다."
-        }
-      }
-      else { //회원이 쓴 게시물의 경우
-        if (consulting.manager) { //manager가 쓴 게시물
-          if (!isSameAuth(consulting.manager, auth)) { //게시물 작성자와 auth가 동일하지 않을 경우
-            consulting.title = '비밀글입니다.';
+      if (consulting.isHidden) {
+        if (!consulting.manager && !consulting.user) { //비회원이 쓴 게시물의 경우
+          if (!isRoot && consulting.isHidden) { //게시물에 비밀번호가 설정되어 있을 경우 
             consulting.content = '비밀글입니다.';
+            consulting.title = "비밀글입니다."
           }
-        } else if(consulting.user){ //user가 쓴 게시물
-          if (!isSameAuth(consulting.user, auth)) { //게시물 작성자와 auth가 동일하지 않을 경우
-            consulting.title = '비밀글입니다.';
-            consulting.content = '비밀글입니다.';
+        }
+        else { //회원이 쓴 게시물의 경우
+          if (consulting.manager) { //manager가 쓴 게시물
+            if (!isSameAuth(consulting.manager, auth)) { //게시물 작성자와 auth가 동일하지 않을 경우
+              consulting.title = '비밀글입니다.';
+              consulting.content = '비밀글입니다.';
+            }
+          } else if (consulting.user) { //user가 쓴 게시물
+            if (!isSameAuth(consulting.user, auth)) { //게시물 작성자와 auth가 동일하지 않을 경우
+              consulting.title = '비밀글입니다.';
+              consulting.content = '비밀글입니다.';
+            }
           }
         }
       }
