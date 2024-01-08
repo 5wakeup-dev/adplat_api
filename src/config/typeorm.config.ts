@@ -55,6 +55,13 @@ import { MemberDeviceToken } from "src/entity/member/memberDeviceToken.entity"
 import { ReserveRequest } from "src/entity/reserve/reserveRequest.entity"
 import { Store } from "src/entity/member/store.entity"
 import { StoreMemo } from "src/entity/member/storeMemo.entity"
+import { PositivePoint } from "src/entity/point/positivePoint.entity"
+import { NegativeHistory } from "src/entity/point/negativeHistory.entity"
+import { NegativePoint } from "src/entity/point/negativePoint.entity"
+import { PositivePointRelation } from "src/entity/point/positivePointRelation.entity"
+import { NegativePointRelation } from "src/entity/point/negativePointRelation.entity"
+import { Product, ProductMove, ProductView } from "src/entity/product/product.entity"
+import { ProductTheme } from "src/entity/product/productTheme.entity"
 
 export const commEntitts = [
   ErrorEntity,
@@ -116,6 +123,14 @@ export const ReserveRequestEntities = [
   ReserveRequest
 ]
 
+export const PointsEntities = [
+  PositivePoint,NegativeHistory,NegativePoint,PositivePointRelation,NegativePointRelation
+]
+
+export const ProductsEntities = [
+  Product,ProductTheme,ProductMove,ProductView,
+]
+
 
 
 export const entities = [
@@ -131,6 +146,8 @@ export const entities = [
   ...anythingEntities,
   ...BlockMemberEntities,
   ...ReserveRequestEntities,
+  ...PointsEntities,
+  ...ProductsEntities,
 ] 
 export const connectionOptions = registerAs('typeorm', (): ConnectionOptions =>{
   // console.log(process.env.MYSQL_USER, process.env.MYSQL_PASSWORD, process.env.MYSQL_DATABASE)
@@ -263,6 +280,17 @@ export const TABLE_ALIAS = {
   DEVICE_TOKEN: 'DVS_TKN',
   
   RESERVE_REQUEST: 'RSQ',
+  POSITIVE_POINTS: 'PSP',
+  NEGATIVE_POINTS: 'NGP',
+  NEGATIVE_POINT_HISTORIES: 'NGP_HIS',
+  POSITIVE_POINT_RELATION: 'PSP_RLA',
+  NEGATIVE_POINT_RELATION: 'NGP_RLA',
+
+  PRODUCT:"PRD",
+  PRODUCT_THEMES:"PRD_THES",
+  PRODUCT_ATTACHMENTS:"PRD_ATTS",
+
+  
 }
 
 export const UK_PREFIX = {
@@ -270,6 +298,7 @@ export const UK_PREFIX = {
   MANAGER: 'MANAG',
   USER: 'USERS',
   ARTWORK: 'ARTWK',
+  PRODUCT: 'PRDT',
   CONSULTING: 'CNSTG',
   REPLY: 'REPLY',
   NOTE: 'NOTES',

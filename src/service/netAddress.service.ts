@@ -6,8 +6,10 @@ import { NetAddress } from "src/entity/comm/netAddress.entity";
 import { ConsultingView } from "src/entity/consulting/consulting.bridge";
 import { Consulting } from "src/entity/consulting/consulting.entity";
 import { ConsultingSave } from "src/entity/consulting/consultingSave.entity";
+import { Product, ProductMove, ProductView } from "src/entity/product/product.entity";
 import { ArtworkRepository } from "src/repository/artwork/artwork.repository";
 import { ConsultingRepository } from "src/repository/consulting/consulting.repository";
+import { ProductRepository } from "src/repository/product/product.repository";
 import { getRepositories } from "src/util/typeorm.util";
 import { Connection } from "typeorm";
 
@@ -162,4 +164,65 @@ export class NetAddressesService {
     return await repos.save.save({consulting,netAddress})
   }
 
+
+
+
+
+  
+  async productAddViewAndCount(product: Product, ip: string): Promise<ArtworkView> {
+    if( !product || !ip )
+      return;
+    const repos = getRepositories({
+      view: ProductView,
+      product: ProductRepository
+    }, this.connection.manager)
+    const netAddress = await this.getOrCreateNetAddress(ip);
+    if( !netAddress )
+      return;
+    const orgView = product.view;
+    const productView = await repos.view.save({ product, netAddress })
+    repos.view.createQueryBuilder('VEW')
+    .select('VEW.netAddress')
+    // .addSelect('COUNT(*) AS viewCount')
+    .where('VEW.product = :productId', {productId: product.id})
+    .groupBy('VEW.netAddress')
+    .getRawMany()
+    .then( async arr => {
+      const count = arr.length;
+      if( orgView !== count ){
+        product.view ++;
+        await repos.product.update( product.id, {
+          view: count,
+          uptDate: () => 'upt_date'
+        })
+      }
+    });
+    
+    
+    
+    return productView;
+  }
+
+  async productAddMoveAndCount(product: Product, ip: string): Promise<number> {
+    if( !product || !ip )
+      return;
+    const repos = getRepositories({
+      move: ProductMove,
+      product: ProductRepository
+    }, this.connection.manager)
+    // const netAddress = await this.getOrCreateNetAddress(ip);
+    // if( !netAddress )
+    //   return;
+    const orgMove =typeof(product.move)==="string"?parseInt(product.move): product.move;
+    // const artworkMove = await repos.move.save({ artwork, netAddress })
+    // product.move ++;
+    await repos.product.update( product.id, {
+      move: orgMove+1,
+      uptDate: () => 'upt_date'
+    })
+
+    
+    
+    return orgMove+1;
+  }
 }

@@ -100,19 +100,7 @@ export const BASIC_EXCEPTION = {
   INCORRECT_TEL: new BasicException({code: 500009, message: '잘못된 전화번호입니다'}),
   SEND_TEMPPASSWORD_FAIL: new BasicException({code: 500010, message: '임시비밀번호 발급에 실패하셨습니다'}),
 
-  // /** TOUR */
-  // UNAVAILABLE_TO_APPLY_FOR_TOUR: new BasicException({code: 600002, message: '신청할 수 없는 상태입니다'}),
   
-
-  // /** CONTRACT */
-  // NOT_ALLOW_UPDATE_WHERE_STATE_OF_CANCEL: new BasicException({code: 700001, message: '취소된 상태에서는 업데이트할 수 없습니다'}),
-  // NOT_ALLOW_UPDATE_WHERE_EXPIRES: new BasicException({code: 700002, message: '만료된 계약은 업데이트할 수 없습니다'}),
-  // INCORRECT_CONTRACT_MEDIA: new BasicException({code: 700003, message: '계약할 대상을 지정해주세요'}),
-  // ALREADY_CONTRACTED: new BasicException({code: 700004, message: '이미 진행 중인 계약이 존재합니다'}),
-  // REQUIRED_INPUT_DATE: new BasicException({code: 700005, message: '계약 날짜 입력이 필수입니다'}),
-  // REQUIRED_POSITION: new BasicException({code: 700006, message: '침대를 선택 해주세요'}),
-
-  /** ORDER & REQUEST PAYMENT */
   NOT_REQUIRE_PAY: new BasicException({code: 600000, message: '결제 프로세스가 불필요합니다'}),
   NOT_ALLOW_PAYMENT: new BasicException({code: 600001, message: '지원하지 않는 구매 방식입니다'}),
   WHAT_HAS_ALREADY_BEEN_DONE_CANNOT_BE_MODIFIED: new BasicException({code: 600002, message: '이미 완료된 결제 건은 수정할 수 없습니다'}),
@@ -139,8 +127,10 @@ export const BASIC_EXCEPTION = {
 
   /** (SHARP) PRODUCT */
   NOT_FOUND_PRODUCT: new BasicException({code: 700000, message: '상품내역을 찾을 수 없습니다.'}),
-  NOT_FOUND_PRODUCT_TIME: new BasicException({code: 700000, message: '일정내역을 찾을 수 없습니다.'}),
-
+  NOT_FOUND_PRODUCT_TIME: new BasicException({code: 700001, message: '일정내역을 찾을 수 없습니다.'}),
+  NOT_ALLOW_POINT_TYPE: new BasicException({code: 700002, message: '허용되지 않은 포인트 사용 방법입니다.'}),
+  INSUFFICIENT_REMAINING_POINT: new BasicException({code: 700003, message: '포인트 잔액이 부족합니다.'}),
+  POINT_HAS_ALREADY_BEAN_CANCELED: new BasicException({code: 700004, message: '이미 취소 처리된 포인트입니다.'}),
   /** RESERVE */
   NOT_FOUND_LOCAL_TYPE: new BasicException({code: 800001, message: '지역정보를 찾을 수 없습니다.'}),
 

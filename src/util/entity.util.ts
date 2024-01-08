@@ -35,6 +35,9 @@ import { ConsultingRepository } from "src/repository/consulting/consulting.repos
 import { ReplyRepository } from "src/repository/reply/reply.repository";
 import { Range } from "src/type/index.type";
 import { StoreDto } from "src/entity/member/store.entity";
+import { PositivePointRelationForm } from "src/entity/point/point.interface";
+import { Product, ProductDto, ProductReq } from "src/entity/product/product.entity";
+import { ProductThemeDto } from "src/entity/product/productTheme.entity";
 // export const MAX_PASSWORD = 512;
 // export const MAX_IDENTITY = 128;
 export const ENTITY_CONSTANTS = {
@@ -484,29 +487,7 @@ export const artworkUtil = {
   }
 }
 
-// type ContainsLabelDtos = {
-//   labels?: Array<KeywordLabelDto>;
-// }
-// type ContainsLabelReqs = {
-//   labels?: Array<KeywordLabelReq>;
-// }
-// type KeywordLabelsUtilOptions = {
-//   origin?: { labels?: Array<KeywordLabel>; },
-//   keywordsService?: KeywordsService
-// }
-// const setKeywordLabelsToDto = async (
-//   dto: ContainsLabelDtos, req:ContainsLabelReqs, 
-//   { origin, keywordsService }: KeywordLabelsUtilOptions = {}
-// ): Promise<Array<KeywordLabelDto>> => {
 
-//   const {
-//     labels: orgLabels = []
-//   } = origin || {};
-//   const {
-
-//   } = req;
-
-// }
 
 const setI18nKeywordsToDto = async (
   dto: ArtworkDto, req: ArtworkReq, { origin, keywordsService, lang, transaction }: ArtworkUtilOption = {}
@@ -594,6 +575,76 @@ const setI18nKeywordsToDto = async (
   return null;
   // return artworkKeywords;
 }
+type ProductUtilOption = {
+  origin?: Product;
+  menuRepository?: MenuRepository;
+  attachmentsService?: AttachmentsService,
+  transaction?: TransactionHelperParam;
+}
+
+export const ProductUtil = {
+  reqToDto: async (
+    req: ProductReq, auth: Manager | User,
+    {
+      origin, menuRepository, attachmentsService, transaction,
+    }: ProductUtilOption = {}
+  ): Promise<ProductDto> => {
+    const promises: Array<Promise<any>> = []
+    const {
+      menu: orgMenu, themes: orgThemes,
+    } = origin || {}
+    const {
+       themes, attachments, menu, startDate, endDate, uptDate, regDate,
+      ...other
+    } = req;
+
+    const dto: ProductDto = { ...other };
+    if (origin) {
+      dto.id = origin?.id;
+    } else {
+      if (auth.type === "Manager")
+        dto.manager = auth;
+      if (auth.type === "User")
+        dto.user = auth;
+      dto.uk = createUuid({ prefix: `${UK_PREFIX.PRODUCT}-${dayjs().format(YYYYMMDDHHmmss)}`, length: 24 })
+    }
+
+    if (menu && menu !== orgMenu?.absoluteKey)
+      promises.push(
+        menuRepository?.getOne(
+          ['functions', 'methods', 'properties'],
+          ctx => ctx.searchQuery({ absoluteKey: menu || 'NULL' })
+        ).then(m => dto.menu = m)
+      )
+
+    if (attachments) {
+      if (attachments.length === 0 && origin)
+        dto.attachments = [];
+      else if (attachments.length > 0)
+        promises.push(
+          attachmentsService?.getAttachmentsAndSort(attachments)
+            .then(res => dto.attachments = res)
+        )
+    }
+
+
+    if (themes){
+      
+      dto.themes=themes
+      // promises.push(
+      //   setProductThemeToDto(dto, req, { origin, keywordsService, transaction, lang }))
+      }
+      else if (!themes&&origin?.themes) dto.themes = origin.themes
+
+    if(startDate)dto.startDate= dayjs(startDate).toDate()
+    if(endDate)dto.endDate= dayjs(endDate).toDate()
+
+
+    await Promise.all(promises)
+    return dto;
+  }
+}
+
 
 type UserUtilOption = {
   origin?: User;
@@ -1268,4 +1319,26 @@ export const notificationUtil = {
 
     return dto;
   }
+
+
+}
+
+export const allowPositiveRelation = (relation: PositivePointRelationForm): boolean => {
+  if (!relation)
+    return false;
+
+  if (relation.type === 'CREATE-USER')
+    return !!relation.user
+  else if (relation.type === 'CREATE-MANAGER')
+    return !!relation.manager;
+  else if (relation.type === 'ACCESS-USER')
+    return !!relation.user
+  else if (relation.type === 'ACCESS-MANAGER')
+    return !!relation.manager;
+  else if (relation.type === 'CREATE-ARTWORK')
+    return !!relation.artwork;
+  else if (relation.type === 'CREATE-CONSULTING')
+    return !!relation.consulting;
+  else
+    return false;
 }

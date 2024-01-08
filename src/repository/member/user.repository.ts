@@ -204,7 +204,6 @@ export class UserRepository extends ChainRepository<User> {
     }
     if(onlyStore){
     query= query.leftJoin(`${this.alias}.store`,`USR_STR`).andWhere(`USR_STR.id is not null`)
-    console.log(storeState)
     if( storeState?.length > 0 ) {
       query = query.andWhere(`USR_STR.state IN (:storeState)`, {storeState});
     }

@@ -125,7 +125,7 @@ export class UsersController {
       dto, sns, snsInfo, auth
     ).then(u => {
       setAuth(req, u);
-      setSnsProvided(req, null);
+      setSnsProvided(req, snsInfo);
       return new UserRes(u)
     });
   }
@@ -146,7 +146,7 @@ export class UsersController {
     return this.usersService.postSignIn(checkAuth)
       .then(usr => {
         setAuth(req, usr);
-        // setSnsProvided(req, null);
+        setSnsProvided(req, snsInfo);
         return new UserRes(usr);
       })
   }
@@ -168,6 +168,10 @@ export class UsersController {
   async getUserSelf(
     @Auth(User) auth: User,
   ): Promise<UserRes> {
+    const repos = getRepositories({
+      user: UserRepository
+    }, this.connection.manager);
+    await repos.user.setProperty({details: ['basic','store.storeMemo'], data: {auth}}, [auth]);
 
     return new UserRes(this.membersService.checkAuth(auth, 'User'));
   }

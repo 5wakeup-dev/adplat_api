@@ -37,6 +37,8 @@ import { NotificationsService } from './service/notifications.service';
 import { ReserveRequestModule } from './module/reserveRequest.module';
 import { CronTasksModule } from './module/cronTasks.module';
 import { NetAddressSubscriber } from './interceptor/netAddress.subscriber';
+import { PointsModule } from './module/points.module';
+import { ProductsModule } from './module/products.module';
 
 @Module({
   imports: [
@@ -83,6 +85,8 @@ import { NetAddressSubscriber } from './interceptor/netAddress.subscriber';
     CronTasksModule,
     // IamportModule,
     KeywordsModule,
+    PointsModule,
+    ProductsModule,
     BlockMembersModule,
     ReserveRequestModule
   ],
@@ -108,7 +112,6 @@ import { NetAddressSubscriber } from './interceptor/netAddress.subscriber';
     ReplySubscriber,
     ReplyHierarchicalSubscriber,
     /** typeorm subscribers E N D */
-
 
     /** subscriber용 알림 관련 service START */
     // FirebaseService,
