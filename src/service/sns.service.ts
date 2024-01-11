@@ -76,6 +76,7 @@ type KakaoAccount = {
   // gender?: 'male'|'female';
   email: string;
   profile: KakaoProfile;
+  name:string;
 }
 type KakaoProfile = {
   nickname: string;
@@ -86,6 +87,7 @@ type KakaoProperties = {
   thumbnail_image: string;
   profile_image: string;
   nickname: string;
+  name:string;
 }
 
 type NaverUserResponse = {
@@ -479,21 +481,21 @@ export class SnsService {
     const headers = { Authorization: `${token_type} ${access_token}` }  // 'Bearer ${accessToken}' 
     return MyAxios.get(
       `${process.env.KAKAO_API_URL}/v2/user/me`,                        // 'https://kapi.kakao.com'
-      { headers }
+      { headers,params:{property_keys:["kakao_account.name","kakao_account.nickname","kakao_account.email"]} }
     ).then(res => {
       const rst = defSuccess<KakaoUserResponse>(res)
       if( rst.result === 'no_content' )
         throw BASIC_EXCEPTION.NOT_ALLOW_EMPTY_ON_PROCESS;
 
       const { data } = rst;
-      // console.log(data);
-      const { id, properties } = data;
-      const { profile_image, nickname } = properties || {};
+      const { id, properties,kakao_account } = data;
+      const { profile_image, nickname} = properties || {};
+      const { name } = kakao_account || {};
       // const {email, profile} = kakao_account;
       return {
         accessToken: maxText(access_token, 512),
         created: new Date().getTime(),
-        uk: id + '',
+        uk: id + '',name,
         type: certificationToken.certificationType,
         imgs: profile_image ? [profile_image] : [],
         nickname,
