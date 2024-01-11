@@ -490,12 +490,13 @@ export class SnsService {
       const { data } = rst;
       const { id, properties,kakao_account } = data;
       const { profile_image, nickname} = properties || {};
-      const { name } = kakao_account || {};
+      const { name,email } = kakao_account || {};
       // const {email, profile} = kakao_account;
+      console.log(data)
       return {
         accessToken: maxText(access_token, 512),
         created: new Date().getTime(),
-        uk: id + '',name,
+        uk: id + '',name,email,
         type: certificationToken.certificationType,
         imgs: profile_image ? [profile_image] : [],
         nickname,
