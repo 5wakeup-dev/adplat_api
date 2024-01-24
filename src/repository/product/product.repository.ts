@@ -144,7 +144,7 @@ export class ProductRepository extends ChainRepository<Product> {
 
   public searchQuery(
     { orderBy, address,
-      uk, title, content, menuIds, userUk, theme, targetEnd,
+      uk, title, company, menuIds, userUk, theme, targetEnd,
       managerUk, state, uks, range,
     }: SearchProductDto = {}
   ): SelectQueryBuilder<Product> {
@@ -166,6 +166,8 @@ export class ProductRepository extends ChainRepository<Product> {
     if (state)
       query = query.andWhere(`${this.alias}.state IN (:state)`, { state })
 
+      if(company) 
+      query = query.andWhere(`${this.alias}.company LIKE :company`, { company: `%${company}%` })
 
     if (address) query = query.andWhere(`${this.alias}.address =  :address`, { address })
     

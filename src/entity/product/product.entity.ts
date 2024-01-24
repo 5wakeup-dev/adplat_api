@@ -59,6 +59,9 @@ export class Product {
   @Column({ nullable: true })
   logo: string;
 
+  @Column({ nullable: true })
+  company: string;
+
   @UpdateDateColumn({ name: "upt_date", type: 'timestamp' })
   uptDate?: Date;
 
@@ -119,6 +122,7 @@ export class ProductRes {
   days: string;
   link: string;
   logo: string;
+  company: string
   move: number;
   price: number;
   endDate: number;
@@ -127,7 +131,7 @@ export class ProductRes {
 
   constructor(
     {
-      id, menu, manager, uk,
+      id, menu, manager, uk, company,
       view, address, days, link, logo, move, price, endDate, startDate, user,
       state, uptDate, regDate, ord, attachments, title, content, themes,
     }: Product
@@ -141,6 +145,7 @@ export class ProductRes {
     this.days = days
     this.link = link;
     this.logo = logo;
+    this.company = company
     this.move = move
     this.price = price
     if (endDate) this.endDate = endDate.getTime()
@@ -184,11 +189,11 @@ export class ProductView {
   @PrimaryGeneratedColumn({ name: 'product_view_id', type: 'bigint' })
   id: string;
 
-  @ManyToOne( () => Product, { nullable: false } )
+  @ManyToOne(() => Product, { nullable: false })
   @JoinColumn({ name: 'product_id', referencedColumnName: 'id' })
   product?: Product;
 
-  @ManyToOne( () => NetAddress, { nullable: false } )
+  @ManyToOne(() => NetAddress, { nullable: false })
   @JoinColumn({ name: 'netAddress_id', referencedColumnName: 'id' })
   netAddress?: NetAddress;
 
@@ -203,11 +208,11 @@ export class ProductMove {
   @PrimaryGeneratedColumn({ name: 'product_move_id', type: 'bigint' })
   id: string;
 
-  @ManyToOne( () => Product, { nullable: false } )
+  @ManyToOne(() => Product, { nullable: false })
   @JoinColumn({ name: 'product_id', referencedColumnName: 'id' })
   product?: Product;
 
-  @ManyToOne( () => NetAddress, { nullable: false } )
+  @ManyToOne(() => NetAddress, { nullable: false })
   @JoinColumn({ name: 'netAddress_id', referencedColumnName: 'id' })
   netAddress?: NetAddress;
 

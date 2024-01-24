@@ -13,6 +13,7 @@ export type SearchProductDto =  Partial<{
   userUk: string;
   range: Range<Date>;
   state: Array<number>;
+  company:string;
   theme: string;
   targetEnd:Date;
 } & SearchPage>

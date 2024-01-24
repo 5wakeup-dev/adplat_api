@@ -32,7 +32,7 @@ import { ProductsService } from "src/service/products.service";
 import { ProductRepository } from "src/repository/product/product.repository";
 
 const PRODUCT_FIT_PIPE = fitPipe<ProductReq>([
-  'menu','attachments', 'title', 'content', 'ord',
+  'menu','attachments', 'title', 'content', 'ord','company',
   'state',"address","days","endDate","link","logo","price","startDate","themes"
 ])
 const SEARCH_NUMBER_PIPE = dynamicPipe<SearchProductDto>(({value}) => {
@@ -78,7 +78,7 @@ const SEARCH_SELECT_PIPE = selectPipe<SearchProductDto>({
 
 const SEARCH_FIT_PIPE = fitPipe<SearchProductDto>([
   'curPage', 'rowPerPage', 'pagePerBlock', 'orderBy','secondOrderBy',
-  'title', 'content', 'managerUk', 'range',  'address',
+  'title', 'content', 'managerUk', 'range',  'address','company',
   'state', 'uks', "userUk","theme"
   
 ])
