@@ -199,7 +199,7 @@ export class ProductRepository extends ChainRepository<Product> {
         )
       } else {
         query = query.andWhere(
-          `( (${this.alias}.startDate IS NULL OR ${this.alias}.startDate <= :end) AND (${this.alias}.endDate IS NULL OR ${this.alias}.endDate <= :end) )`,
+          `( (${this.alias}.startDate IS NULL OR ${this.alias}.startDate <= :end) AND (${this.alias}.endDate IS NOT NULL AND ${this.alias}.endDate <= :end) )`,
           val
         )
       }
