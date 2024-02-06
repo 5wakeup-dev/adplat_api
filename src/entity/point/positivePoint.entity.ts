@@ -2,7 +2,7 @@ import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, Ma
 import { Manager, ManagerRes } from "../member/manager.entity";
 import { User, UserRes } from "../member/user.entity";
 import { NegativePoint, NegativePointRes } from "./negativePoint.entity";
-import { PositivePointRelation } from "./positivePointRelation.entity";
+import { PositivePointRelation, PositivePointRelationDto } from "./positivePointRelation.entity";
 
 @Entity({name: 'positive_points'})
 export class PositivePoint {
@@ -48,13 +48,15 @@ export class PositivePoint {
   })
   histories: Array<NegativePoint>;
 
-  @OneToOne( () => PositivePointRelation, entity => entity.positive)
+  @OneToOne( () => PositivePointRelation, entity => entity.positive, { orphanedRowAction: 'delete', cascade: ['insert', 'update'], eager: true })
   relation: PositivePointRelation;
 }
 
 export type PositivePointDto = Partial<
-  Omit<PositivePoint, 'reg_date'|'histories'|'remaining'|'expires'>
-  & { expires: number }
+  Omit<PositivePoint, 'reg_date'|'histories'|'expires'>
+  & { 
+    expires: number
+   }
 >
 
 export class PositivePointRes {

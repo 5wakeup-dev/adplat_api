@@ -44,8 +44,6 @@ import { Reply } from "src/entity/reply/reply.entity"
 import { ReplyHierarchical } from "src/entity/reply/replyHierarchical.entity"
 import { ArtworkRange } from "src/entity/artwork/artworkRange.entity"
 import { NotificationRelation } from "src/entity/notification/notificationRelation.entity"
-
-
 import { ConsultingRelation } from "src/entity/consulting/consultingRelation.entity"
 import { ArtworkRegion } from "src/entity/artwork/artworkRegion.entity"
 
@@ -62,7 +60,7 @@ import { PositivePointRelation } from "src/entity/point/positivePointRelation.en
 import { NegativePointRelation } from "src/entity/point/negativePointRelation.entity"
 import { Product, ProductMove, ProductView } from "src/entity/product/product.entity"
 import { ProductTheme } from "src/entity/product/productTheme.entity"
-
+import { VisitorCount } from 'src/entity/analytics/visitorCount.entity'
 export const commEntitts = [
   ErrorEntity,
   Environment,
@@ -74,8 +72,8 @@ export const roleEntities = [
   Role
 ] as const
 export const menuEntities = [
-  Menu, MenuHierarchical, 
-  MenuMethod, MenuFunction, MenuI18n, 
+  Menu, MenuHierarchical,
+  MenuMethod, MenuFunction, MenuI18n,
   MenuMetadata, MenuProperty,
   // Menu, MenuFunction, MenuHierarchical
 ] as const
@@ -89,13 +87,13 @@ export const memberEntities = [
   Manager, ManagerHistory,
   User, UserHistory,
   MemberBasic, MemberSns, MemberDeviceToken,
-  Store,StoreMemo
+  Store, StoreMemo
 ] as const;
 
 export const artworkEntities = [
-  Artwork, ArtworkHierarchical, ArtworkI18n, 
+  Artwork, ArtworkHierarchical, ArtworkI18n,
   ArtworkProperty, ArtworkView, ArtworkKeyword, ArtworkLabel,
-  ArtworkRange, ArtworkRegion,ArtworkMove
+  ArtworkRange, ArtworkRegion, ArtworkMove
 ]
 
 export const consultingEntities = [
@@ -124,19 +122,24 @@ export const ReserveRequestEntities = [
 ]
 
 export const PointsEntities = [
-  PositivePoint,NegativeHistory,NegativePoint,PositivePointRelation,NegativePointRelation
+  PositivePoint, NegativeHistory, NegativePoint, PositivePointRelation, NegativePointRelation
 ]
 
 export const ProductsEntities = [
-  Product,ProductTheme,ProductMove,ProductView,
+  Product, ProductTheme, ProductMove, ProductView,
 ]
 
+export const AnaylticsEntities = [
+  VisitorCount
+]
+  
 
 
 export const entities = [
   ...commEntitts,
   ...notificationEntities,
   ...roleEntities,
+  ...AnaylticsEntities,
   ...menuEntities,
   ...memberEntities,
   ...artworkEntities,
@@ -148,48 +151,50 @@ export const entities = [
   ...ReserveRequestEntities,
   ...PointsEntities,
   ...ProductsEntities,
-] 
-export const connectionOptions = registerAs('typeorm', (): ConnectionOptions =>{
+]
+export const connectionOptions = registerAs('typeorm', (): ConnectionOptions => {
   // console.log(process.env.MYSQL_USER, process.env.MYSQL_PASSWORD, process.env.MYSQL_DATABASE)
   return {
-  // name: 'main',
-  type: "mysql",
-  host: process.env.MYSQL_HOST,
-  port: parseInt(process.env.MYSQL_PORT, 10) || 3306,
-  username: process.env.MYSQL_USER,
-  password: process.env.MYSQL_PASSWORD,
-  database: process.env.MYSQL_DATABASE,
-  charset: "utf8mb4",
-  // entities: ["dist/**/*.entity{.ts,.js}"],
-  entities,
-  // subscribers: [ManagerSubscriber, UserSubscriber, ArtworkI18nSubscriber, ExternalBuyerSubscriber, ConsultingSubscriber, ReplySubscriber],
-  synchronize: false,
-  // logging: process.env.NODE_ENV !== 'prod',
-  logging: true,
-  bigNumberStrings: true
-}})
+    // name: 'main',
+    type: "mysql",
+    host: process.env.MYSQL_HOST,
+    port: parseInt(process.env.MYSQL_PORT, 10) || 3306,
+    username: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PASSWORD,
+    database: process.env.MYSQL_DATABASE,
+    charset: "utf8mb4",
+    // entities: ["dist/**/*.entity{.ts,.js}"],
+    entities,
+    // subscribers: [ManagerSubscriber, UserSubscriber, ArtworkI18nSubscriber, ExternalBuyerSubscriber, ConsultingSubscriber, ReplySubscriber],
+    synchronize: false,
+    // logging: process.env.NODE_ENV !== 'prod',
+    logging: true,
+    bigNumberStrings: true
+  }
+})
 
 
 const entitiesAsSub = [
   ...commEntitts, ...roleEntities, ...memberEntities
 ]
-export const connectionOptionsAsSub = registerAs('typeorm', (): ConnectionOptions =>{
+export const connectionOptionsAsSub = registerAs('typeorm', (): ConnectionOptions => {
   // console.log(process.env.MYSQL_USER, process.env.MYSQL_PASSWORD, process.env.MYSQL_DATABASE)
   return {
-  // name: 'sub',
-  type: "mysql",
-  host: process.env.MYSQL_HOST,
-  port: parseInt(process.env.MYSQL_PORT, 10) || 3306,
-  username: process.env.MYSQL_USER,
-  password: process.env.MYSQL_PASSWORD,
-  database: process.env.MYSQL_DATABASE,
-  // entities: ["dist/**/*.entity{.ts,.js}"],
-  entities: entitiesAsSub,
-  // subscribers: [ManagerSubscriber, UserSubscriber, ArtworkI18nSubscriber, ExternalBuyerSubscriber, ConsultingSubscriber, ReplySubscriber],
-  synchronize: false,
-  logging: process.env.NODE_ENV !== 'prod',
-  bigNumberStrings: true
-}})
+    // name: 'sub',
+    type: "mysql",
+    host: process.env.MYSQL_HOST,
+    port: parseInt(process.env.MYSQL_PORT, 10) || 3306,
+    username: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PASSWORD,
+    database: process.env.MYSQL_DATABASE,
+    // entities: ["dist/**/*.entity{.ts,.js}"],
+    entities: entitiesAsSub,
+    // subscribers: [ManagerSubscriber, UserSubscriber, ArtworkI18nSubscriber, ExternalBuyerSubscriber, ConsultingSubscriber, ReplySubscriber],
+    synchronize: false,
+    logging: process.env.NODE_ENV !== 'prod',
+    bigNumberStrings: true
+  }
+})
 
 export const TABLE_ALIAS = {
   ATTACHMENTS: 'ATT',
@@ -203,7 +208,7 @@ export const TABLE_ALIAS = {
   NOTIFICATION_BUTTONS: 'NTF_BTN',
   NOTIFICATION_HISTORIES: 'NTF_HIS',
   NOTIFICATION_ATTACHMENT: 'NTF_ATC',
-  
+
   MENUS: 'MNU',
   MENU_METHODS: 'MNU_MTD',
   MENU_METHOD_ROLES: 'MNU_MTD_ROL',
@@ -249,7 +254,7 @@ export const TABLE_ALIAS = {
   NOTES: 'NTE',
   NOTE_LABELS: 'NTE_LBL',
   NOTE_LINKS: 'NTE_LNK',
-  NET_ADDRESS:'NADR',
+  NET_ADDRESS: 'NADR',
   ADDRESSES: 'ADR',
   SCHOOLES: 'SCR',
   SHARP_OPTIONS: 'SHP_OPT',
@@ -258,15 +263,15 @@ export const TABLE_ALIAS = {
   INSTRUMENT_MARKET_ATTACHMENTS: 'IST_MKT_ATC',
   INSTRUMENT_MARKET_ADDRESSES: 'IST_MKT_ADR',
 
-  
+
   REQUEST_PAYMENTS: 'RQP',
   REQUEST_PAYMENT_BUYER: 'RQP_BUY',
   REQUEST_PAYMENT_BANK: 'RQP_BNK',
   REQUEST_PAYMENT_REFUND: 'RQP_RFD',
   REQUEST_PAYMENT_HISTORIES: 'RQP_HIS',
 
-  STORE:"STR",
-  STORE_MEMO:"STR_MEM",
+  STORE: "STR",
+  STORE_MEMO: "STR_MEM",
 
   SHARP_REVIEWS: 'SHP_RVW',
   SHARP_REVIEW_ATTACHMENTS: 'SHP_RVW_ATC',
@@ -278,7 +283,7 @@ export const TABLE_ALIAS = {
   FCM_NOTIFICATION: 'FCM_NTF',
 
   DEVICE_TOKEN: 'DVS_TKN',
-  
+
   RESERVE_REQUEST: 'RSQ',
   POSITIVE_POINTS: 'PSP',
   NEGATIVE_POINTS: 'NGP',
@@ -286,11 +291,11 @@ export const TABLE_ALIAS = {
   POSITIVE_POINT_RELATION: 'PSP_RLA',
   NEGATIVE_POINT_RELATION: 'NGP_RLA',
 
-  PRODUCT:"PRD",
-  PRODUCT_THEMES:"PRD_THES",
-  PRODUCT_ATTACHMENTS:"PRD_ATTS",
+  PRODUCT: "PRD",
+  PRODUCT_THEMES: "PRD_THES",
+  PRODUCT_ATTACHMENTS: "PRD_ATTS",
 
-  
+
 }
 
 export const UK_PREFIX = {
@@ -306,14 +311,14 @@ export const UK_PREFIX = {
   NOTIFICATION: 'NTFCT',
 
   KEYWORD_LABEL: 'KWDLB',
-  
+
   SHARP_OPTION: 'SPOPT',
   INSTRUMENT_MARKET: 'ISTMK',
   SHARP_PRODUCT: 'SPPRD',
 
   REQUEST_PAYMENT: 'RQPAY',
 
-  RESERVE:'RESV',
+  RESERVE: 'RESV',
   SHARP_ORDER_DELIVERY: 'SODLV',
   SHARP_ORDER: 'SPORD',
 

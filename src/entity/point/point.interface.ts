@@ -15,6 +15,11 @@ import { Reply } from "../reply/reply.entity";
 
 export type SearchPositivePoint = Partial<{
   isRemaining?: boolean;
+  targetDate: string;
+  type: string;
+  consultingUk:string
+  userUk: string
+  managerUk: string;
 }> & SearchNegativePoint
 
 

@@ -3,7 +3,8 @@ import { Artwork } from "../artwork/artwork.entity";
 import { Consulting } from "../consulting/consulting.entity";
 import { Manager } from "../member/manager.entity";
 import { User } from "../member/user.entity";
-import { PositivePoint } from "./positivePoint.entity";
+import { PositivePoint, PositivePointDto } from "./positivePoint.entity";
+import { Replace } from "src/type/index.type";
 
 @Entity({ name: 'positive_point_relations'})
 export class PositivePointRelation {
@@ -36,3 +37,13 @@ export class PositivePointRelation {
   consulting?: Consulting;
 
 }
+export type PositivePointRelationDto = Partial<
+  Replace<
+    Omit<PositivePointRelation, 'positive'|'id'|'consulting'>,
+    {
+      positive:PositivePointDto
+      id?:number;
+      
+    }
+  >
+>

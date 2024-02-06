@@ -39,6 +39,7 @@ import { CronTasksModule } from './module/cronTasks.module';
 import { NetAddressSubscriber } from './interceptor/netAddress.subscriber';
 import { PointsModule } from './module/points.module';
 import { ProductsModule } from './module/products.module';
+import { AnalyticsModule } from './module/analytics.module';
 
 @Module({
   imports: [
@@ -88,7 +89,8 @@ import { ProductsModule } from './module/products.module';
     PointsModule,
     ProductsModule,
     BlockMembersModule,
-    ReserveRequestModule
+    ReserveRequestModule,
+    AnalyticsModule
   ],
   controllers: [ TestController ],
   providers: [
