@@ -1,6 +1,12 @@
 import { Controller, Get } from "@nestjs/common";
 import * as dayjs from "dayjs";
 import { VisitorCount } from "src/entity/analytics/visitorCount.entity";
+import { ConsultingRepository } from "src/repository/consulting/consulting.repository";
+import { StoreRepository } from "src/repository/member/store.repository";
+import { UserRepository } from "src/repository/member/user.repository";
+import { ProductRepository } from "src/repository/product/product.repository";
+import { MenusService } from "src/service/menus.service";
+import { getRepositories } from "src/util/typeorm.util";
 
 import { Connection } from "typeorm";
 
@@ -8,9 +14,58 @@ import { Connection } from "typeorm";
 export class AnalyticsController {
   constructor(
     private connection: Connection,
+    private menusService: MenusService
+
   ) { }
 
+  @Get("/main")
+  async mainCountings(
+  ): Promise<{ total: number, today: number, products: number, store: number, user: number, qna: number }> {
+    const visitor = this.connection.getRepository(VisitorCount)
 
+    const toDayresult = await visitor.findOne({ where: { type: "TODAY", targetDate: dayjs().startOf("date").toDate() } })
+    const totalResult = await visitor.findOne({ type: "TOTAL" })
+    const repos = getRepositories({
+      product: ProductRepository,
+      user: UserRepository,
+      store: StoreRepository,
+      consulting: ConsultingRepository
+    }, this.connection.manager);
+    const storeCount = await repos.store.count();
+    const userCount = await repos.user.count();
+    const productCount = await repos.product.count()
+    const menuIds = (await this.menusService.getMenus({
+      absoluteKey: "qna", branchType: "deep",
+      self: true,
+    })).map(({ id }) => id);
+    const qnaCount = await repos.consulting.searchQuery({ menuIds: menuIds }).getCount()
+
+    return { today: toDayresult?.count || 0, total: totalResult.count, products: productCount, qna: qnaCount, store: storeCount, user: userCount }
+  }
+
+  @Get("/visitor/calendar")
+  async getVisitorCalendar(): Promise<any[]> {
+    const visitor = this.connection.getRepository(VisitorCount)
+    const monthDay = dayjs().add(-7, 'day').toDate()
+    const rowData = await visitor
+      .createQueryBuilder()
+      .select("DATE_FORMAT(target_date, '%Y-%m-%d')", 'targetDate')
+      .addSelect('count', 'count')
+      .andWhere(`target_date >=:monthDay`, { monthDay })
+      .andWhere(`type = "today"`)
+      .orderBy(`targetDate`, "DESC")
+      .getRawMany();
+
+    // const rowData = await visitor
+    //   .createQueryBuilder()
+    //   .select("DATE_FORMAT(target_date, '%Y-%m')", 'month')
+    //   .addSelect('SUM(`count`)', 'total')
+    //   .andWhere(`year(target_date) = :currentYear`, { currentYear: dayjs().year() })
+    //   .andWhere(`type = "today"`)
+    //   .groupBy('month')
+    //   .getRawMany();
+    return rowData
+  }
   @Get()
   async counting(
   ): Promise<any> {
