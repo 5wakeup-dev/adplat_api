@@ -505,6 +505,10 @@ export class ArtworkRepository extends ChainRepository<Artwork> {
       query = query.leftJoin(`${this.alias}.ranges`, `SRC_EVENT_${ARTWORK_RANGES}`)
       if (ingEvent) {
         query = query.andWhere(
+          `(SRC_EVENT_${ARTWORK_RANGES}.startDate IS NULL OR SRC_EVENT_${ARTWORK_RANGES}.startDate <= :start)`, { start: ingEvent }
+        )
+
+        query = query.andWhere(
           `(SRC_EVENT_${ARTWORK_RANGES}.endDate IS NULL OR SRC_EVENT_${ARTWORK_RANGES}.endDate >= :end)`, { end: ingEvent }
         )
       }
