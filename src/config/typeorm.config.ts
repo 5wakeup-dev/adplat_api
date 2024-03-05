@@ -61,6 +61,7 @@ import { NegativePointRelation } from "src/entity/point/negativePointRelation.en
 import { Product, ProductMove, ProductView } from "src/entity/product/product.entity"
 import { ProductTheme } from "src/entity/product/productTheme.entity"
 import { VisitorCount } from 'src/entity/analytics/visitorCount.entity'
+import { MailHistory } from "src/entity/mail/mailHistory.entity"
 export const commEntitts = [
   ErrorEntity,
   Environment,
@@ -126,7 +127,7 @@ export const PointsEntities = [
 ]
 
 export const ProductsEntities = [
-  Product, ProductTheme, ProductMove, ProductView,
+  Product, ProductTheme, ProductMove, ProductView,MailHistory
 ]
 
 export const AnaylticsEntities = [
@@ -167,8 +168,8 @@ export const connectionOptions = registerAs('typeorm', (): ConnectionOptions => 
     entities,
     // subscribers: [ManagerSubscriber, UserSubscriber, ArtworkI18nSubscriber, ExternalBuyerSubscriber, ConsultingSubscriber, ReplySubscriber],
     synchronize: false,
-    // logging: process.env.NODE_ENV !== 'prod',
-    logging: true,
+    logging: process.env.NODE_ENV !== 'prod',
+    // logging: true,
     bigNumberStrings: true
   }
 })
@@ -208,7 +209,7 @@ export const TABLE_ALIAS = {
   NOTIFICATION_BUTTONS: 'NTF_BTN',
   NOTIFICATION_HISTORIES: 'NTF_HIS',
   NOTIFICATION_ATTACHMENT: 'NTF_ATC',
-
+  MAIL:"MAIL",
   MENUS: 'MNU',
   MENU_METHODS: 'MNU_MTD',
   MENU_METHOD_ROLES: 'MNU_MTD_ROL',

@@ -21,12 +21,81 @@ import { DEFAULT_ROLE } from "src/entity/role/role.interface";
 import { Product, ProductDto } from "src/entity/product/product.entity";
 import { ProductRepository } from "src/repository/product/product.repository";
 import { SearchProductDto } from "src/entity/product/product.interface";
+import { MenuRepository } from "src/repository/menu/menu.repository";
+import { MailerRes } from "src/util/notification.util";
+import { MailerService } from "@nestjs-modules/mailer";
+import { MailRepository } from "src/repository/mail/mailHistory.repository";
+import { MailHistory, MailHistoryReq } from "src/entity/mail/mailHistory.entity";
 
 @Injectable()
 export class ProductsService {
   constructor(
     private connection: Connection,
+    private mailerService: MailerService
+
   ) { }
+
+  @TransactionHelper({ paramIndex: 2 })
+  async sendMail(
+    absoluteKeys: string[], auth: Manager,
+    transaction: TransactionHelperParam = { connection: this.connection, entityManager: this.connection.manager }
+  ): Promise<any> {
+
+    if (!auth) {
+      throw BASIC_EXCEPTION.NOT_FOUND_AUTH;
+    }
+    const isRoot = isContainRoles(auth, ['root'] as Array<DEFAULT_ROLE>);
+    if (!isRoot) throw BASIC_EXCEPTION.NOT_ALLOW_AUTH
+
+    const repos = getRepositories({
+      menu: MenuRepository,
+      mail: MailRepository
+    }, transaction.entityManager);
+
+    const companys = await repos.menu.getMany(["metadatas", "i18ns"], ctx => ctx.searchQuery({ absoluteKeys }))
+    if (!companys || companys.length < 1)
+      throw BASIC_EXCEPTION.EMPTY_CONTENT
+    const mailResults: MailHistoryReq[] = []
+    Promise.all([companys.forEach(async (company) => {
+
+      const companyTitle = company.i18ns[0].title
+      const email = company.metadatas.find(m => m.key === "email").val
+
+      if (email) {
+        const title = `${companyTitle} 웹진`;
+        await this.mailerService
+          .sendMail({
+            to: email,
+            subject: title,
+            template: 'email/webzine',
+            context: {
+              name: companyTitle,
+              domain: `${process.env.NEXT_PUBLIC_LOCAL}/webzine?company=${companyTitle}`
+            }
+          })
+          .then(async (_res: MailerRes) => {
+
+            // const mailHistory: MailHistoryReq = {
+            //   address: email, title, receiver: companyTitle, senderType: "manager",
+            //   content: "domain:`" + `https://t-moa.com/webzine?company=${companyTitle}` + '`'
+            // }
+            
+      
+          })
+          .catch(async (_err) => {
+            throw { code: 5000, message: '서버 에러' };
+          })
+
+      }
+
+    })])
+    
+
+
+
+
+
+  }
 
   async getProduct(
     uk: string, auth: User | Manager
@@ -45,7 +114,7 @@ export class ProductsService {
     // const isOwner = isSameAuth(auth, artwork?.manager)
     if (!product)
       throw BASIC_EXCEPTION.EMPTY_CONTENT;
-    
+
     const { manager, user, menu, ...other } = product;
 
     return { ...other };
@@ -78,7 +147,7 @@ export class ProductsService {
 
   @TransactionHelper({ paramIndex: 2 })
   async createProduct(
-    dto: ProductDto, auth: Manager|User,
+    dto: ProductDto, auth: Manager | User,
     { entityManager }: TransactionHelperParam = { connection: this.connection, entityManager: this.connection.manager }
   ): Promise<Product> {
     if (!dto?.menu)

@@ -5,6 +5,7 @@ import { HierarchicalBranchType } from "../comm/comm.interface";
 
 export type SearchMenuDto = Partial<{
   absoluteKey: string;
+  absoluteKeys: Array<string>;
   // likeAbsoluteKey: string;
   branchType: HierarchicalBranchType;
   metaKey: string;
