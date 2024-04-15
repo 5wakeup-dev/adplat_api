@@ -67,6 +67,8 @@ export class AttachmentsService {
           const fileType = await FileType.fromBuffer(innerBuffer);
           const id: string = createUuid({prefix: `ATTCH-${dayjs().format(YYYYMMDDHHmmss)}`, length: 32})
           let metadata = null;
+          originalname=Buffer.from(originalname,"latin1").toString("utf-8");
+
           try {
             metadata = fileType.mime.indexOf('image/') > -1 ? imageSize(innerBuffer) : null
           } catch (error) { }
@@ -74,7 +76,7 @@ export class AttachmentsService {
             id, size,
             mimetype,
             originName: originalname,
-            fileType, 
+            fileType:mimetype==="application/haansofthwp"?{...fileType,mime:"application/haansofthwp"}:fileType,
             metadata,
             buffer:innerBuffer
           }
