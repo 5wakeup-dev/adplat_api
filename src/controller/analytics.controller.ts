@@ -1,4 +1,4 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get, Query } from "@nestjs/common";
 import * as dayjs from "dayjs";
 import { VisitorCount } from "src/entity/analytics/visitorCount.entity";
 import { ConsultingRepository } from "src/repository/consulting/consulting.repository";
@@ -44,26 +44,31 @@ export class AnalyticsController {
   }
 
   @Get("/visitor/calendar")
-  async getVisitorCalendar(): Promise<any[]> {
+  async getVisitorCalendar(
+    @Query('today') today: string,
+    @Query('limit') limit: number = 10, // 기본값을 10으로 설정
+  ): Promise<any[]> {
     const visitor = this.connection.getRepository(VisitorCount)
-    const monthDay = dayjs().add(-7, 'day').toDate()
-    const rowData = await visitor
-      .createQueryBuilder()
-      .select("DATE_FORMAT(target_date, '%Y-%m-%d')", 'targetDate')
-      .addSelect('count', 'count')
-      .andWhere(`target_date >=:monthDay`, { monthDay })
-      .andWhere(`type = "today"`)
-      .orderBy(`targetDate`, "DESC")
-      .getRawMany();
-
+    // const monthDay = dayjs().add(-7, 'day').toDate()
     // const rowData = await visitor
     //   .createQueryBuilder()
-    //   .select("DATE_FORMAT(target_date, '%Y-%m')", 'month')
-    //   .addSelect('SUM(`count`)', 'total')
-    //   .andWhere(`year(target_date) = :currentYear`, { currentYear: dayjs().year() })
+    //   .select("DATE_FORMAT(target_date, '%Y-%m-%d')", 'targetDate')
+    //   .addSelect('count', 'count')
+    //   .andWhere(`target_date >=:monthDay`, { monthDay })
     //   .andWhere(`type = "today"`)
-    //   .groupBy('month')
+    //   .orderBy(`targetDate`, "DESC")
     //   .getRawMany();
+
+      const todayDate = today ? dayjs(parseInt(today)).startOf('day').toDate() : dayjs().startOf('day').toDate();
+      const weekAgoDate = dayjs(todayDate).add(-7, 'days').toDate();
+      const rowData = await visitor
+        .createQueryBuilder()
+        .select("DATE_FORMAT(target_date, '%Y-%m-%d')", 'targetDate')
+        .addSelect('count', 'count')
+        .where(`target_date BETWEEN :weekAgoDate AND :todayDate`, { weekAgoDate, todayDate })
+        .andWhere(`type = "today"`)
+        .orderBy(`targetDate`, "DESC")
+        .getRawMany();
     return rowData
   }
   @Get()
